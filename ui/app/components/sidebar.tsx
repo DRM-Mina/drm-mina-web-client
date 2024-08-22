@@ -14,7 +14,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
