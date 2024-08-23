@@ -1,4 +1,4 @@
-import { Field } from 'o1js';
+import { CircuitString, Field } from 'o1js';
 import { uuidRegex } from './constants.js';
 
 export class UUID {
@@ -29,5 +29,25 @@ export class UUID {
     uuid = uuid.replace(/-/g, '').toUpperCase();
     const bigint = BigInt('0x' + uuid).toString(10);
     return Field(bigint);
+  }
+}
+
+export class Serial {
+  constructor(public serial: string) {
+    serial = serial.toUpperCase();
+  }
+
+  toCircuitString(): CircuitString {
+    return CircuitString.fromString(this.serial);
+  }
+  static isEqual(a: Serial, b: Serial) {
+    const aStr = a.toCircuitString();
+    const bStr = b.toCircuitString();
+    return aStr.equals(bStr);
+  }
+
+  public static fromStringToCircuitString(serial: string): CircuitString {
+    serial = serial.toUpperCase();
+    return CircuitString.fromString(serial);
   }
 }
