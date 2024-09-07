@@ -13,7 +13,6 @@ import { useRouter } from "next/navigation";
 import { useGamesStore } from "@/lib/stores/gameStore";
 import GameBookmark from "./bookmark";
 import DiscountRate from "./discountRate";
-// import BuyGame from "./buyGame";
 
 const ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
