@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { create } from "zustand";
+import { fetchGameData } from "../api";
 
 interface GameStoreState {
     games: Game[];
@@ -15,3 +17,16 @@ export const useGamesStore = create<GameStoreState>()((set) => ({
     setGames: (gameList) => set({ games: gameList, isGameSet: true }),
     setDiscountGames: (gameList) => set({ discountGames: gameList }),
 }));
+
+export const useObserveGames = () => {
+    const gameStore = useGamesStore();
+
+    useEffect(() => {
+        (async () => {
+            const games: Game[] = await fetchGameData();
+            let gameList: Game[] = [];
+            let discountGames: Game[] = [];
+            gameStore.setGames(games);
+        })();
+    }, []);
+};

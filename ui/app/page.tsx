@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { useDeviceStore } from "@/lib/stores/deviceStore";
 import Store from "@/app/store/page";
+import { useObserveGames } from "@/lib/stores/gameStore";
 
 export default function Home() {
     const gameName = useSearchParams()?.get("game");
@@ -11,6 +12,7 @@ export default function Home() {
 
     const router = useRouter();
     const deviceStore = useDeviceStore();
+    useObserveGames();
 
     useEffect(() => {
         if (device || gameName) {
