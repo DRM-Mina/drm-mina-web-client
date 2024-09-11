@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { useUserStore } from "@/lib/stores/userWallet";
+import { useUserStore } from "@/lib/stores/userStore";
+
 import { Check } from "lucide-react";
 import React from "react";
 

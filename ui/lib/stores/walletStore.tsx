@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-interface ProviderState {
+interface WalletState {
     isConnected: boolean;
     walletInstalled: boolean;
     userPublicKey?: string;
@@ -12,7 +12,7 @@ interface ProviderState {
     disconnect: () => void;
 }
 
-export const useProviderStore = create<ProviderState, [["zustand/immer", never]]>(
+export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
     immer((set) => ({
         isConnected: false,
         walletInstalled: false,

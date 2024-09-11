@@ -4,7 +4,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { postSlotNames } from "@/lib/api";
 import useHasMounted from "@/lib/customHooks";
 import { useDeviceStore } from "@/lib/stores/deviceStore";
-import { useUserStore } from "@/lib/stores/userWallet";
+import { useUserStore } from "@/lib/stores/userStore";
+import { useWalletStore } from "@/lib/stores/walletStore";
 import { useWorkerStore } from "@/lib/stores/workerStore";
 import React, { useEffect, useState } from "react";
 
@@ -14,6 +15,7 @@ interface AssignDeviceProps {
 
 export default function AssignDevice({ gameId }: AssignDeviceProps) {
     const userStore = useUserStore();
+    const walletStore = useWalletStore();
     const deviceStore = useDeviceStore();
     const workerStore = useWorkerStore();
     const [slotNames, setSlotNames] = useState<string[]>([]);
@@ -24,7 +26,7 @@ export default function AssignDevice({ gameId }: AssignDeviceProps) {
 
     useEffect(() => {
         setSlotNames(userStore.slotNames);
-    }, [userStore.slotNames, userStore.userPublicKey]);
+    }, [userStore.slotNames, walletStore.userPublicKey]);
 
     const hasMounted = useHasMounted();
     useEffect(() => {
@@ -59,13 +61,13 @@ export default function AssignDevice({ gameId }: AssignDeviceProps) {
             // TODO: enable in prod
             // deviceStore.isDeviceSet &&
             workerStore.isReady &&
-            userStore.isConnected &&
+            walletStore.isConnected &&
             userStore.library.includes(gameId) &&
             userStore.gameId === gameId
         ) {
             setCanAssign(true);
         }
-    }, [userStore.isConnected, userStore.library, userStore.gameId, workerStore.isReady]);
+    }, [walletStore.isConnected, userStore.library, userStore.gameId, workerStore.isReady]);
 
     return (
         <div className=" col-span-3">
@@ -91,7 +93,7 @@ export default function AssignDevice({ gameId }: AssignDeviceProps) {
                                         if (event.key === "Enter") {
                                             (async () => {
                                                 const res = await postSlotNames(
-                                                    userStore.userPublicKey!,
+                                                    walletStore.userPublicKey!,
                                                     gameId,
                                                     slotNames
                                                 );

@@ -1,11 +1,12 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useUserStore } from "@/lib/stores/userWallet";
 import { Card, CardContent, CardDescription, CardFooter, CardTitle } from "@/components/ui/card";
 import { useGamesStore } from "@/lib/stores/gameStore";
 import { useEffect } from "react";
 import { fetchWishlist } from "@/lib/api";
+import { useUserStore } from "@/lib/stores/userStore";
+import { useWalletStore } from "@/lib/stores/walletStore";
 
 const ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -16,15 +17,17 @@ export default function Wishlist() {
 
     const userStore = useUserStore();
 
+    const walletStore = useWalletStore();
+
     useEffect(() => {
-        if (userStore.isConnected) {
-            fetchWishlist(userStore.userPublicKey || "").then((data) => {
+        if (walletStore.isConnected) {
+            fetchWishlist(walletStore.userPublicKey || "").then((data) => {
                 userStore.setWishlist(data);
             });
         }
     }, []);
 
-    return userStore.isConnected ? (
+    return walletStore.isConnected ? (
         <div className=" p-8">
             {userStore.wishlist.length === 0 ? (
                 <div className=" flex w-full justify-center ">
