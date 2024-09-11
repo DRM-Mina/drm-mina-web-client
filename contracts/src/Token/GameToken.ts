@@ -1,5 +1,4 @@
 import {
-  Account,
   AccountUpdate,
   AccountUpdateForest,
   Bool,
@@ -53,6 +52,14 @@ export class GameToken extends TokenContractV2 {
 
   @state(Bool) paused = State<Bool>();
 
+  readonly events = {
+    SetAdmin: SetAdminEvent,
+    Pause: PauseEvent,
+    Mint: MintEvent,
+    Burn: BurnEvent,
+    BalanceChange: BalanceChangeEvent,
+  };
+
   async deploy(props: GameTokenDeployProps) {
     await super.deploy(props);
 
@@ -91,6 +98,16 @@ export class GameToken extends TokenContractV2 {
 
     this.paused.set(Bool(false));
     this.paused.set(startPaused);
+
+    const accountUpdate = AccountUpdate.createSigned(
+      this.address,
+      this.deriveTokenId()
+    );
+    let permissions = Permissions.default();
+    // This is necessary in order to allow token holders to burn.
+    permissions.send = Permissions.none();
+    permissions.setPermissions = Permissions.impossible();
+    accountUpdate.account.permissions.set(permissions);
   }
 
   @method.returns(AccountUpdate)
@@ -122,6 +139,20 @@ export class GameToken extends TokenContractV2 {
     circulationUpdate.balanceChange = Int64.fromUnsigned(mintAmount);
 
     return accountUpdate;
+  }
+
+  @method
+  async pause() {
+    this.onlyPublisher();
+    this.paused.set(Bool(true));
+    this.emitEvent('Pause', new PauseEvent({ isPaused: Bool(true) }));
+  }
+
+  @method
+  async resume() {
+    this.onlyPublisher();
+    this.paused.set(Bool(false));
+    this.emitEvent('Pause', new PauseEvent({ isPaused: Bool(false) }));
   }
 
   @method
@@ -159,9 +190,19 @@ export class GameToken extends TokenContractV2 {
     this.publisher.set(publisher);
   }
 
-  onlyPublisher() {
+  private onlyPublisher() {
     const publisher = this.publisher.getAndRequireEquals();
     AccountUpdate.create(publisher).requireSignature();
+  }
+
+  private async ensureAdminSignature() {
+    const admin = await Provable.witnessAsync(PublicKey, async () => {
+      let pk = await this.publisher.fetch();
+      assert(pk !== undefined, 'could not fetch admin public key');
+      return pk;
+    });
+    this.publisher.requireEquals(admin);
+    return AccountUpdate.createSigned(admin);
   }
 
   private checkPermissionsUpdate(update: AccountUpdate) {
@@ -217,6 +258,19 @@ export class GameToken extends TokenContractV2 {
       Int64.zero,
       GameTokenErrors.unbalancedTransaction
     );
+  }
+
+  @method.returns(UInt64)
+  async getBalanceOf(address: PublicKey): Promise<UInt64> {
+    const account = AccountUpdate.create(address, this.deriveTokenId()).account;
+    const balance = account.balance.get();
+    account.balance.requireEquals(balance);
+    return balance;
+  }
+
+  async getCirculating(): Promise<UInt64> {
+    let circulating = await this.getBalanceOf(this.address);
+    return circulating;
   }
 }
 
