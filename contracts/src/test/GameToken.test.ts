@@ -1,5 +1,5 @@
 import { PrivateKey, Mina, UInt64, Bool, AccountUpdate } from 'o1js';
-import { GameToken } from '../Token/GameToken.js';
+import { GameToken } from '../GameToken.js';
 
 describe('GameToken Contract Tests', () => {
   const proofsEnabled = false;
