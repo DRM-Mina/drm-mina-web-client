@@ -2,6 +2,7 @@ import {
   AccountUpdate,
   Bool,
   method,
+  Provable,
   PublicKey,
   SmartContract,
   State,
@@ -33,7 +34,7 @@ export class CustomTokenAdmin
   @method.returns(Bool)
   public async canMint(accountUpdate: AccountUpdate) {
     return accountUpdate.body.balanceChange.magnitude.lessThanOrEqual(
-      UInt64.from(500)
+      UInt64.from(1)
     );
   }
 
