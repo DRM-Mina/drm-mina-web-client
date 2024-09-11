@@ -7,7 +7,35 @@ import {
   Permissions,
   VerificationKey,
   Bool,
+  Struct,
+  Field,
+  UInt64,
 } from 'o1js';
+
+export class Devices extends Struct({
+  device_1: Field,
+  device_2: Field,
+  device_3: Field,
+  device_4: Field,
+}) {}
+
+export class DeviceKey extends Struct({
+  gameId: UInt64,
+  address: PublicKey,
+}) {
+  public static from(gameId: UInt64, address: PublicKey) {
+    return new DeviceKey({ gameId, address });
+  }
+}
+
+export class SessionKey extends Struct({
+  gameId: UInt64,
+  identifierHash: Field,
+}) {
+  public static from(gameId: UInt64, identifierHash: Field) {
+    return new SessionKey({ gameId, identifierHash });
+  }
+}
 
 export class DRM extends SmartContract {
   @state(PublicKey) gameTokenAddress = State<PublicKey>();
