@@ -17,4 +17,20 @@ export class Identifiers extends Struct({
   baseboardSerial: CircuitString,
   macAddress: MacAddressField,
   diskSerial: CircuitString,
-}) {}
+}) {
+  toFields() {
+    return [
+      this.cpuId,
+      this.systemSerial.hash(),
+      this.systemUUID,
+      this.baseboardSerial.hash(),
+      this.macAddress.ethernet.hash(),
+      this.macAddress.wifi.hash(),
+      this.diskSerial.hash(),
+    ];
+  }
+
+  hash() {
+    return Poseidon.hash(this.toFields());
+  }
+}
