@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Bookmark, Store, Gamepad2, Shapes, Bell } from "lucide-react";
-// import Web3wallet from "./web3wallet/web3wallet";
+import Web3wallet from "./web3wallet/web3wallet";
 import Link from "next/link";
 import {
     DropdownMenu,
@@ -91,7 +91,7 @@ export function Sidebar({ className }: SidebarProps) {
                             <Bookmark className="mr-2 h-4 w-4" />
                             Wishlist
                         </Button>
-                        {/* <Web3wallet /> */}
+                        <Web3wallet />
                     </div>
                 </div>
             </div>
