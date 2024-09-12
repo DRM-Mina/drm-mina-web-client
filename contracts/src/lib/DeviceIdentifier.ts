@@ -13,7 +13,7 @@ export interface RawIdentifiers {
 export class Identifiers extends Struct({
   cpuId: Field,
   systemSerial: CircuitString,
-  systemUUID: Field,
+  systemUUID: CircuitString,
   baseboardSerial: CircuitString,
   macAddress: MacAddressField,
   diskSerial: CircuitString,
@@ -22,7 +22,7 @@ export class Identifiers extends Struct({
     return [
       this.cpuId,
       this.systemSerial.hash(),
-      this.systemUUID,
+      this.systemUUID.hash(),
       this.baseboardSerial.hash(),
       this.macAddress.ethernet.hash(),
       this.macAddress.wifi.hash(),
