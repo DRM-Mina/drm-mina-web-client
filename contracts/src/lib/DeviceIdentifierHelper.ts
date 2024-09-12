@@ -1,5 +1,5 @@
 import { CircuitString, Field, Struct } from 'o1js';
-import { uuidRegex } from './constants.js';
+import { macAddressRegex, uuidRegex } from './constants.js';
 
 export class UUID {
   constructor(public uuid: string) {
@@ -22,11 +22,11 @@ export class UUID {
     return Field(bigint);
   }
 
-  public static fromStringToField(uuid: string): Field {
+  public static fromStringToCircuitString(uuid: string): CircuitString {
     if (!uuidRegex.test(uuid)) throw new Error('Invalid UUID');
     uuid = uuid.replace(/-/g, '').toUpperCase();
-    const bigint = BigInt('0x' + uuid).toString(10);
-    return Field(bigint);
+    const circuitString = CircuitString.fromString(uuid);
+    return circuitString;
   }
 }
 
@@ -55,36 +55,6 @@ export class MacAddressField extends Struct({
   wifi: CircuitString,
 }) {
   constructor(macAddress: { ethernet: CircuitString; wifi: CircuitString }) {
-    // macAddress.ethernet.length().assertEquals(Field(12));
-    // macAddress.wifi.length().assertEquals(Field(12));
-
-    for (let i = 0; i < 12; i++) {
-      let A = macAddress.ethernet.values[i]
-        .toField()
-        .greaterThanOrEqual(Field(65));
-      let Z = macAddress.ethernet.values[i]
-        .toField()
-        .lessThanOrEqual(Field(90));
-
-      let zero = macAddress.ethernet.values[i]
-        .toField()
-        .greaterThanOrEqual(Field(48));
-      let nine = macAddress.ethernet.values[i]
-        .toField()
-        .lessThanOrEqual(Field(57));
-
-      A.and(Z).or(zero.and(nine)).assertTrue();
-
-      A = macAddress.wifi.values[i].toField().greaterThanOrEqual(Field(65));
-      Z = macAddress.wifi.values[i].toField().lessThanOrEqual(Field(90));
-
-      zero = macAddress.wifi.values[i].toField().greaterThanOrEqual(Field(48));
-
-      nine = macAddress.wifi.values[i].toField().lessThanOrEqual(Field(57));
-
-      A.and(Z).or(zero.and(nine)).assertTrue();
-    }
-
     super(macAddress);
   }
 }
@@ -101,7 +71,6 @@ export class MacAddress {
   }
 
   isValid(): boolean {
-    const macAddressRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
     return macAddressRegex.test(this.macAddress);
   }
 
