@@ -13,8 +13,11 @@ import { useRouter } from "next/navigation";
 import { useGamesStore } from "@/lib/stores/gameStore";
 import GameBookmark from "./bookmark";
 import DiscountRate from "./discountRate";
+// import dynamic from "next/dynamic";
 
 const ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
+
+// const BuyGame = dynamic(() => import("./buyGame"));
 
 export default function Featured() {
     const gameStore = useGamesStore();
