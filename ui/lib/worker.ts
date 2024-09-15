@@ -5,7 +5,7 @@ import {
     DeviceIdentifierProof,
 } from "drm-mina-contracts/build/src/lib/DeviceIdentifierProof";
 import { GameToken } from "drm-mina-contracts/build/src/GameToken";
-import { fetchAccount, Mina, PublicKey } from "o1js";
+import { AccountUpdate, fetchAccount, Mina, PublicKey } from "o1js";
 
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
@@ -78,11 +78,17 @@ const functions = {
         });
     },
     buyGame: async ({ recipient }: { recipient: string }) => {
-        const transaction = await Mina.transaction(async () => {
-            await state.contracts["GameToken"].zkapp!.mintGameToken(
-                PublicKey.fromBase58(recipient)
-            );
-        });
+        const sender = PublicKey.fromBase58(recipient);
+        const transaction = await Mina.transaction(
+            {
+                sender: sender,
+                fee: 1e8,
+            },
+            async () => {
+                AccountUpdate.fundNewAccount(sender);
+                await state.contracts["GameToken"].zkapp!.mintGameToken(sender);
+            }
+        );
         state.transaction = transaction;
     },
     proveUpdateTransaction: async (args: {}) => {
