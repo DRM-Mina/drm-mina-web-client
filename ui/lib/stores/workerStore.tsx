@@ -54,18 +54,10 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
             await worker.initZkappInstance({
                 contractName: "GameToken",
                 publicKey: PublicKey.fromBase58(
-                    "B62qrESrwwpre49NNWAFcBbDNDoJa4BzTbMErccoV4p3Kt7DawZ9j7H"
+                    "B62qia82GkCuroGxy4bLxKTvMQfTm8ddyqJieZvHyJQ9NBULczpSjPz"
                 ),
             });
             console.log("zkApp initialized");
-
-            // console.log("Fetching account");
-            // const result = await worker.fetchAccount({
-            //     publicKey: PublicKey.fromBase58(
-            //         "B62qrESrwwpre49NNWAFcBbDNDoJa4BzTbMErccoV4p3Kt7DawZ9j7H"
-            //     ),
-            // });
-            // console.log("Account fetched", result);
 
             const price = await worker.getPrice();
 
