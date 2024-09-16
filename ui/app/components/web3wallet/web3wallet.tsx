@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { authenticateUser } from "@/lib/api";
 import { useWalletStore } from "@/lib/stores/walletStore";
 import { Wallet } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -12,18 +13,21 @@ export default function Web3wallet() {
     const { toast } = useToast();
 
     const handleConnectWallet = async () => {
-        // if (!walletStore.walletInstalled) {
-        //     toast({
-        //         description: "Please install a Mina wallet",
-        //     });
-        //     return;
-        // }
         const res = await walletStore.connect();
         if (!res) {
             toast({
                 title: "Error",
                 description: "Failed to connect wallet",
             });
+        } else if (walletStore.userPublicKey) {
+            const token = await authenticateUser(walletStore.userPublicKey);
+            if (!token) {
+                toast({
+                    title: "Error",
+                    description: "Failed to authenticate user",
+                });
+                walletStore.disconnect();
+            }
         }
     };
     return (
