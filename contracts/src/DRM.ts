@@ -30,7 +30,7 @@ export class Devices extends Struct({
 
 export const offchainState = OffchainState({
   devices: OffchainState.Map(PublicKey, Devices),
-  sessions: OffchainState.Map(Field, Field),
+  sessions: OffchainState.Map(Field, UInt64),
 });
 
 class StateProof extends offchainState.Proof {}
@@ -229,7 +229,7 @@ export class DRM extends SmartContract {
 
     offchainState.fields.sessions.update(deletedDevice, {
       from: deletedDeviceLastSession,
-      to: Field.from(0),
+      to: UInt64.from(0),
     });
 
     offchainState.fields.devices.update(userAddress, {
@@ -243,12 +243,35 @@ export class DRM extends SmartContract {
 
     offchainState.fields.sessions.update(deviceIdentifierHash, {
       from: newDeviceLastSession,
-      to: Field.from(1),
+      to: UInt64.from(1),
     });
   }
 
   @method
   async createSession(deviceSessionProof: DeviceSessionProof) {
     deviceSessionProof.verify();
+
+    const deviceHash = deviceSessionProof.publicOutput.hash;
+
+    const currentSessionKey = deviceSessionProof.publicInput.currentSessionKey;
+    const newSessionKey = deviceSessionProof.publicOutput.newSessionKey;
+
+    const fetchedSession = await offchainState.fields.sessions.get(deviceHash);
+    fetchedSession.assertSome('Device session not found');
+
+    fetchedSession.value.assertGreaterThanOrEqual(
+      UInt64.from(1),
+      'Current device is not active'
+    );
+    fetchedSession.value.assertEquals(currentSessionKey);
+
+    fetchedSession.value
+      .equals(newSessionKey)
+      .assertFalse('New session key is the same as the current session key');
+
+    offchainState.fields.sessions.update(deviceHash, {
+      from: currentSessionKey,
+      to: newSessionKey,
+    });
   }
 }
