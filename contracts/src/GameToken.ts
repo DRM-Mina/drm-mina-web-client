@@ -19,12 +19,10 @@ import {
 } from 'o1js';
 
 interface GameTokenDeployProps extends Exclude<DeployArgs, undefined> {
-  /** The token symbol. */
   symbol: string;
-  /** A source code reference, which is placed within the `zkappUri` of the contract account.
-   * Typically a link to a file on github. */
   src: string;
 }
+
 export const GameTokenErrors = {
   noAdminKey: 'could not fetch admin contract key',
   noPermissionToChangeAdmin: 'Not allowed to change admin contract',
@@ -48,7 +46,7 @@ export class GameToken extends TokenContractV2 {
 
   @state(UInt64) timeoutInterval = State<UInt64>();
 
-  @state(UInt64) maxTreeHeight = State<UInt64>();
+  @state(UInt64) maxDeviceAllowed = State<UInt64>();
 
   @state(Bool) paused = State<Bool>();
 
@@ -85,7 +83,7 @@ export class GameToken extends TokenContractV2 {
     gamePrice: UInt64,
     discount: UInt64,
     timeoutInterval: UInt64,
-    maxTreeHeight: UInt64,
+    maxDeviceAllowed: UInt64,
     startPaused: Bool
   ) {
     this.account.provedState.requireEquals(Bool(false));
@@ -94,7 +92,7 @@ export class GameToken extends TokenContractV2 {
     this.gamePrice.set(gamePrice);
     this.discount.set(discount);
     this.timeoutInterval.set(timeoutInterval);
-    this.maxTreeHeight.set(maxTreeHeight);
+    this.maxDeviceAllowed.set(maxDeviceAllowed);
 
     this.paused.set(Bool(false));
     this.paused.set(startPaused);
@@ -177,10 +175,10 @@ export class GameToken extends TokenContractV2 {
   }
 
   @method
-  async setMaxTreeHeight(height: UInt64) {
+  async setMaxDeviceAllowed(height: UInt64) {
     this.onlyPublisher();
-    this.maxTreeHeight.getAndRequireEquals();
-    this.maxTreeHeight.set(height);
+    this.maxDeviceAllowed.getAndRequireEquals();
+    this.maxDeviceAllowed.set(height);
   }
 
   @method
