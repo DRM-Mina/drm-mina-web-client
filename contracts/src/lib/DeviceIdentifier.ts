@@ -16,7 +16,7 @@ export interface RawIdentifiers {
 }
 
 export class Identifiers extends Struct({
-  cpuId: Field,
+  cpuId: CircuitString,
   systemSerial: CircuitString,
   systemUUID: CircuitString,
   baseboardSerial: CircuitString,
@@ -24,7 +24,7 @@ export class Identifiers extends Struct({
   diskSerial: CircuitString,
 }) {
   constructor(
-    public cpuId: Field,
+    public cpuId: CircuitString,
     public systemSerial: CircuitString,
     public systemUUID: CircuitString,
     public baseboardSerial: CircuitString,
@@ -43,7 +43,7 @@ export class Identifiers extends Struct({
 
   toFields() {
     return [
-      this.cpuId,
+      this.cpuId.hash(),
       this.systemSerial.hash(),
       this.systemUUID.hash(),
       this.baseboardSerial.hash(),
@@ -54,7 +54,7 @@ export class Identifiers extends Struct({
   }
 
   static fromRaw(raw: RawIdentifiers): Identifiers {
-    const cpuId = Field.from(raw.cpuId);
+    const cpuId = Serial.fromStringToCircuitString(raw.cpuId);
     const systemSerial = Serial.fromStringToCircuitString(raw.systemSerial);
     const systemUUID = UUID.fromStringToCircuitString(raw.systemUUID);
     const baseboardSerial = Serial.fromStringToCircuitString(
