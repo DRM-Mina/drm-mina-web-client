@@ -26,7 +26,16 @@ export class Devices extends Struct({
   device_2: Field,
   device_3: Field,
   device_4: Field,
-}) {}
+}) {
+  static empty(): Devices {
+    return new Devices({
+      device_1: Field.from(0),
+      device_2: Field.from(0),
+      device_3: Field.from(0),
+      device_4: Field.from(0),
+    });
+  }
+}
 
 export const offchainState = OffchainState({
   devices: OffchainState.Map(PublicKey, Devices),
@@ -71,7 +80,7 @@ export class DRM extends SmartContract {
   }
 
   @method
-  async addDevice(
+  async initAndAddDevice(
     userAddress: PublicKey,
     deviceProof: DeviceIdentifierProof,
     deviceIndex: UInt64
@@ -86,15 +95,26 @@ export class DRM extends SmartContract {
     const gameTokenId = TokenId.derive(gameTokenAddress);
     const accountUpdate = AccountUpdate.create(userAddress, gameTokenId);
     const tokenBalance = accountUpdate.account.balance.getAndRequireEquals();
-    gameToken.approveAccountUpdate(accountUpdate);
+    await gameToken.approveAccountUpdate(accountUpdate);
     tokenBalance.assertGreaterThan(UInt64.zero);
 
     const maxDeviceAllowed = gameToken.maxDeviceAllowed.getAndRequireEquals();
     deviceIndex.assertLessThan(maxDeviceAllowed);
 
     const deviceIdentifierHash = deviceProof.publicOutput;
-    const prevDevices = (await offchainState.fields.devices.get(userAddress))
-      .value;
+
+    Provable.asProver(() => {
+      console.log('deviceIdentifierHash', deviceIdentifierHash.toString());
+    });
+
+    (await offchainState.fields.devices.get(userAddress)).isSome.assertFalse(
+      'User already init devices'
+    );
+    Provable.asProver(() => {
+      console.log('currentState');
+    });
+    // currentState.isSome.assertFalse('User already init devices');
+    const prevDevices = Devices.empty();
 
     const device_1 = Provable.if(
       UInt64.from(deviceIndex).equals(UInt64.from(1)),
@@ -127,151 +147,146 @@ export class DRM extends SmartContract {
       device_4: device_4,
     });
 
-    const changedDevice = Provable.if(
-      prevDevices.device_1.equals(newDevices.device_1).not(),
-      prevDevices.device_1,
-      Provable.if(
-        prevDevices.device_2.equals(newDevices.device_2).not(),
-        prevDevices.device_2,
-        Provable.if(
-          prevDevices.device_3.equals(newDevices.device_3).not(),
-          prevDevices.device_3,
-          Provable.if(
-            prevDevices.device_4.equals(newDevices.device_4).not(),
-            prevDevices.device_4,
-            Field.from(0)
-          )
-        )
-      )
-    );
-  }
-
-  @method
-  async changeDevice(
-    userAddress: PublicKey,
-    deviceProof: DeviceIdentifierProof,
-    deviceIndex: UInt64
-  ) {
-    deviceProof.verify();
-    AccountUpdate.create(userAddress).requireSignature();
-
-    const gameTokenAddress = this.gameTokenAddress.getAndRequireEquals();
-    const gameToken = new GameToken(gameTokenAddress);
-
-    // Check if the user has game token
-    const gameTokenId = TokenId.derive(gameTokenAddress);
-    const accountUpdate = AccountUpdate.create(userAddress, gameTokenId);
-    const tokenBalance = accountUpdate.account.balance.getAndRequireEquals();
-    gameToken.approveAccountUpdate(accountUpdate);
-    tokenBalance.assertGreaterThan(UInt64.zero);
-
-    const maxDeviceAllowed = gameToken.maxDeviceAllowed.getAndRequireEquals();
-    deviceIndex.assertLessThan(maxDeviceAllowed);
-
-    const deviceIdentifierHash = deviceProof.publicOutput;
-    const prevDevices = (await offchainState.fields.devices.get(userAddress))
-      .value;
-
-    const device_1 = Provable.if(
-      UInt64.from(deviceIndex).equals(UInt64.from(1)),
-      deviceIdentifierHash,
-      prevDevices.device_1
-    );
-
-    const device_2 = Provable.if(
-      UInt64.from(deviceIndex).equals(UInt64.from(2)),
-      deviceIdentifierHash,
-      prevDevices.device_2
-    );
-
-    const device_3 = Provable.if(
-      UInt64.from(deviceIndex).equals(UInt64.from(3)),
-      deviceIdentifierHash,
-      prevDevices.device_3
-    );
-
-    const device_4 = Provable.if(
-      UInt64.from(deviceIndex).equals(UInt64.from(4)),
-      deviceIdentifierHash,
-      prevDevices.device_4
-    );
-
-    const newDevices = new Devices({
-      device_1: device_1,
-      device_2: device_2,
-      device_3: device_3,
-      device_4: device_4,
-    });
-
-    const deletedDevice = Provable.if(
-      prevDevices.device_1.equals(newDevices.device_1).not(),
-      prevDevices.device_1,
-      Provable.if(
-        prevDevices.device_2.equals(newDevices.device_2).not(),
-        prevDevices.device_2,
-        Provable.if(
-          prevDevices.device_3.equals(newDevices.device_3).not(),
-          prevDevices.device_3,
-          Provable.if(
-            prevDevices.device_4.equals(newDevices.device_4).not(),
-            prevDevices.device_4,
-            Field.from(0)
-          )
-        )
-      )
-    );
-
-    deletedDevice.assertGreaterThan(Field.from(0));
-
-    const deletedDeviceLastSession = (
-      await offchainState.fields.sessions.get(deletedDevice)
-    ).value;
-
-    offchainState.fields.sessions.update(deletedDevice, {
-      from: deletedDeviceLastSession,
-      to: UInt64.from(0),
+    Provable.asProver(() => {
+      console.log('newDevices', newDevices.device_1.toString());
     });
 
     offchainState.fields.devices.update(userAddress, {
-      from: prevDevices,
+      from: undefined,
       to: newDevices,
     });
 
-    const newDeviceLastSession = (
-      await offchainState.fields.sessions.get(deviceIdentifierHash)
-    ).value;
-
-    offchainState.fields.sessions.update(deviceIdentifierHash, {
-      from: newDeviceLastSession,
-      to: UInt64.from(1),
+    Provable.asProver(() => {
+      console.log('finish update devices');
     });
   }
 
-  @method
-  async createSession(deviceSessionProof: DeviceSessionProof) {
-    deviceSessionProof.verify();
+  // @method
+  // async changeDevice(
+  //   userAddress: PublicKey,
+  //   deviceProof: DeviceIdentifierProof,
+  //   deviceIndex: UInt64
+  // ) {
+  //   deviceProof.verify();
+  //   AccountUpdate.create(userAddress).requireSignature();
 
-    const deviceHash = deviceSessionProof.publicOutput.hash;
+  //   const gameTokenAddress = this.gameTokenAddress.getAndRequireEquals();
+  //   const gameToken = new GameToken(gameTokenAddress);
 
-    const currentSessionKey = deviceSessionProof.publicInput.currentSessionKey;
-    const newSessionKey = deviceSessionProof.publicOutput.newSessionKey;
+  //   // Check if the user has game token
+  //   const gameTokenId = TokenId.derive(gameTokenAddress);
+  //   const accountUpdate = AccountUpdate.create(userAddress, gameTokenId);
+  //   const tokenBalance = accountUpdate.account.balance.getAndRequireEquals();
+  //   gameToken.approveAccountUpdate(accountUpdate);
+  //   tokenBalance.assertGreaterThan(UInt64.zero);
 
-    const fetchedSession = await offchainState.fields.sessions.get(deviceHash);
-    fetchedSession.assertSome('Device session not found');
+  //   const maxDeviceAllowed = gameToken.maxDeviceAllowed.getAndRequireEquals();
+  //   deviceIndex.assertLessThan(maxDeviceAllowed);
 
-    fetchedSession.value.assertGreaterThanOrEqual(
-      UInt64.from(1),
-      'Current device is not active'
-    );
-    fetchedSession.value.assertEquals(currentSessionKey);
+  //   const deviceIdentifierHash = deviceProof.publicOutput;
 
-    fetchedSession.value
-      .equals(newSessionKey)
-      .assertFalse('New session key is the same as the current session key');
+  //   const currentState = await offchainState.fields.devices.get(userAddress);
+  //   currentState.assertSome('User has not init devices');
+  //   const prevDevices = currentState.value;
 
-    offchainState.fields.sessions.update(deviceHash, {
-      from: currentSessionKey,
-      to: newSessionKey,
-    });
-  }
+  //   const device_1 = Provable.if(
+  //     UInt64.from(deviceIndex).equals(UInt64.from(1)),
+  //     deviceIdentifierHash,
+  //     prevDevices.device_1
+  //   );
+
+  //   const device_2 = Provable.if(
+  //     UInt64.from(deviceIndex).equals(UInt64.from(2)),
+  //     deviceIdentifierHash,
+  //     prevDevices.device_2
+  //   );
+
+  //   const device_3 = Provable.if(
+  //     UInt64.from(deviceIndex).equals(UInt64.from(3)),
+  //     deviceIdentifierHash,
+  //     prevDevices.device_3
+  //   );
+
+  //   const device_4 = Provable.if(
+  //     UInt64.from(deviceIndex).equals(UInt64.from(4)),
+  //     deviceIdentifierHash,
+  //     prevDevices.device_4
+  //   );
+
+  //   const newDevices = new Devices({
+  //     device_1: device_1,
+  //     device_2: device_2,
+  //     device_3: device_3,
+  //     device_4: device_4,
+  //   });
+
+  //   const deletedDevice = Provable.if(
+  //     prevDevices.device_1.equals(newDevices.device_1).not(),
+  //     prevDevices.device_1,
+  //     Provable.if(
+  //       prevDevices.device_2.equals(newDevices.device_2).not(),
+  //       prevDevices.device_2,
+  //       Provable.if(
+  //         prevDevices.device_3.equals(newDevices.device_3).not(),
+  //         prevDevices.device_3,
+  //         Provable.if(
+  //           prevDevices.device_4.equals(newDevices.device_4).not(),
+  //           prevDevices.device_4,
+  //           Field.from(0)
+  //         )
+  //       )
+  //     )
+  //   );
+
+  //   const deletedDeviceLastSession = await offchainState.fields.sessions.get(
+  //     deletedDevice
+  //   );
+
+  //   offchainState.fields.sessions.update(deletedDevice, {
+  //     from: deletedDeviceLastSession,
+  //     to: UInt64.from(0),
+  //   });
+
+  //   offchainState.fields.devices.update(userAddress, {
+  //     from: prevDevices,
+  //     to: newDevices,
+  //   });
+
+  //   const newDeviceLastSession = await offchainState.fields.sessions.get(
+  //     deviceIdentifierHash
+  //   );
+
+  //   offchainState.fields.sessions.update(deviceIdentifierHash, {
+  //     from: newDeviceLastSession,
+  //     to: UInt64.from(1),
+  //   });
+  // }
+
+  // @method
+  // async createSession(deviceSessionProof: DeviceSessionProof) {
+  //   deviceSessionProof.verify();
+
+  //   const deviceHash = deviceSessionProof.publicOutput.hash;
+
+  //   const currentSessionKey = deviceSessionProof.publicInput.currentSessionKey;
+  //   const newSessionKey = deviceSessionProof.publicOutput.newSessionKey;
+
+  //   const fetchedSession = await offchainState.fields.sessions.get(deviceHash);
+  //   fetchedSession.assertSome('Device session not found');
+
+  //   fetchedSession.value.assertGreaterThanOrEqual(
+  //     UInt64.from(1),
+  //     'Current device is not active'
+  //   );
+  //   fetchedSession.value.assertEquals(currentSessionKey);
+
+  //   fetchedSession.value
+  //     .equals(newSessionKey)
+  //     .assertFalse('New session key is the same as the current session key');
+
+  //   offchainState.fields.sessions.update(deviceHash, {
+  //     from: currentSessionKey,
+  //     to: newSessionKey,
+  //   });
+  // }
 }
