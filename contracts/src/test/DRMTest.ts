@@ -25,7 +25,7 @@ const proofsEnabled = true;
 const GAMEPRICE = 10000;
 const DISCOUNT = 1000;
 const TIMEOUTINTERVAL = 100;
-const MAXTREEHEIGHT = 2;
+const MAXTREEHEIGHT = 4;
 
 const localChain = await Mina.LocalBlockchain({
   proofsEnabled,
@@ -46,16 +46,23 @@ const DRMInstance = new DRM(DRMAddr);
 
 offchainState.setContractInstance(DRMInstance);
 
+console.time('Compile DeviceIdentifier ');
 await DeviceIdentifier.compile();
+console.timeEnd('Compile DeviceIdentifier ');
+console.time('Compile DeviceSession ');
 await DeviceSession.compile();
-console.log('Compiling GameToken ...');
+console.timeEnd('Compile DeviceSession ');
+console.time('Compile GameToken ');
 await GameToken.compile();
-console.log('Compiling offchainState ...');
+console.timeEnd('Compile GameToken ');
+console.time('Compile offchainState ');
 await offchainState.compile();
-console.log('Compiling DRM ...');
+console.timeEnd('Compile offchainState ');
+console.time('Compile DRM ');
 await DRM.compile();
+console.timeEnd('Compile DRM ');
 
-console.log('Deploying GameToken and DRM ...');
+console.time('Deploying GameToken and DRM ');
 const deployTx = await Mina.transaction(
   {
     sender: publisher,
@@ -84,8 +91,9 @@ deployTx.sign([publisher.key, GameTokenPk, DRMPk]);
 
 await deployTx.prove();
 await deployTx.send();
+console.timeEnd('Deploying GameToken and DRM ');
 
-console.log('Alice buys a game ...');
+console.time('Alice buys a game ...');
 
 const aliceMinaBalanceBefore = Mina.getBalance(alice).toBigInt();
 const aliceGameTokenBalanceBefore = await GameTokenInstance.getBalanceOf(alice);
@@ -107,6 +115,7 @@ aliceTx.sign([alice.key]);
 
 await aliceTx.prove();
 await aliceTx.send();
+console.timeEnd('Alice buys a game ...');
 
 const aliceMinaBalanceAfter = Mina.getBalance(alice).toBigInt();
 const aliceGameTokenBalanceAfter = await GameTokenInstance.getBalanceOf(alice);
@@ -139,14 +148,13 @@ console.log(
 const AliceDeviceRaw = mockIdentifiers[0];
 const AliceDeviceIdentifiers = Identifiers.fromRaw(AliceDeviceRaw);
 
-console.log('Alice registers a device ...');
-
+console.time('Device identifier proof create');
 const deviceIdentifier = await DeviceIdentifier.proofForDevice(
   AliceDeviceIdentifiers
 );
 
-console.log('Device identifier proof created');
-
+console.timeEnd('Device identifier proof create');
+console.time('Alice registers a device');
 const registerDeviceTx = await Mina.transaction(
   {
     sender: alice,
@@ -161,8 +169,9 @@ registerDeviceTx.sign([alice.key, DRMPk]);
 
 await registerDeviceTx.prove();
 await registerDeviceTx.send();
+console.timeEnd('Alice registers a device');
 
-console.log('Setttling ...');
+console.time('Setttling');
 
 let proof = await offchainState.createSettlementProof();
 const txnProof = await Mina.transaction(alice, async () => {
@@ -171,5 +180,52 @@ const txnProof = await Mina.transaction(alice, async () => {
 await txnProof.prove();
 await txnProof.sign([alice.key]).send();
 
+console.timeEnd('Setttling');
+
 const aliceDevices = await offchainState.fields.devices.get(alice);
 console.log('Alice devices:', aliceDevices.value.device_1.toString());
+
+const AliceDeviceRaw2 = mockIdentifiers[1];
+const AliceDeviceIdentifiers2 = Identifiers.fromRaw(AliceDeviceRaw2);
+
+console.time('Device identifier proof create');
+const deviceIdentifier2 = await DeviceIdentifier.proofForDevice(
+  AliceDeviceIdentifiers2
+);
+
+console.timeEnd('Device identifier proof create');
+
+console.time('Alice registers a device');
+const registerDeviceTx2 = await Mina.transaction(
+  {
+    sender: alice,
+    fee: 1e8,
+  },
+  async () => {
+    await DRMInstance.changeDevice(alice, deviceIdentifier2, UInt64.from(2));
+  }
+);
+
+registerDeviceTx2.sign([alice.key, DRMPk]);
+
+await registerDeviceTx2.prove();
+await registerDeviceTx2.send();
+console.timeEnd('Alice registers a device');
+
+console.time('Setttling');
+
+proof = await offchainState.createSettlementProof();
+const txnProof2 = await Mina.transaction(alice, async () => {
+  await DRMInstance.settle(proof);
+});
+await txnProof2.prove();
+await txnProof2.sign([alice.key]).send();
+
+console.timeEnd('Setttling');
+
+const aliceDevices2 = await offchainState.fields.devices.get(alice);
+console.log(
+  'Alice devices:',
+  aliceDevices2.value.device_1.toString(),
+  aliceDevices2.value.device_2.toString()
+);

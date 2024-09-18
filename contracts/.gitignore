@@ -12,3 +12,7 @@ coverage
 # Never commit keys to Git!
 keys
 .env
+
+mock.ts
+
+src/temp/
