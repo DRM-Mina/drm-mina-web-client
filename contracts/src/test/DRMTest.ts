@@ -62,7 +62,7 @@ console.time('Compile DRM ');
 await DRM.compile();
 console.timeEnd('Compile DRM ');
 
-console.time('Deploying GameToken and DRM ');
+console.time('Deploying GameToken and DRM');
 const deployTx = await Mina.transaction(
   {
     sender: publisher,
@@ -93,7 +93,7 @@ await deployTx.prove();
 await deployTx.send();
 console.timeEnd('Deploying GameToken and DRM ');
 
-console.time('Alice buys a game ...');
+console.time('Alice buys a game');
 
 const aliceMinaBalanceBefore = Mina.getBalance(alice).toBigInt();
 const aliceGameTokenBalanceBefore = await GameTokenInstance.getBalanceOf(alice);
