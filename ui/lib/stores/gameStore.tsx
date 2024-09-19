@@ -26,6 +26,11 @@ export const useObserveGames = () => {
             const games: Game[] = await fetchGameData();
             let gameList: Game[] = [];
             let discountGames: Game[] = [];
+            games.forEach((game) => {
+                if (!game.imageFolder) {
+                    game.imageFolder = "default";
+                }
+            });
             gameStore.setGames(games);
         })();
     }, []);

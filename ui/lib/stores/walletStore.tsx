@@ -4,6 +4,7 @@ import { immer } from "zustand/middleware/immer";
 
 interface WalletState {
     isConnected: boolean;
+    isAuthenticated: boolean;
     walletInstalled: boolean;
     userPublicKey?: string;
     network?: string;
@@ -17,11 +18,13 @@ interface WalletState {
     observeWalletChange: () => void;
     connect: () => Promise<boolean>;
     disconnect: () => void;
+    setIsAuthenticated: (isAuthenticated: boolean) => void;
 }
 
 export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
     immer((set) => ({
         isConnected: false,
+        isAuthenticated: false,
         walletInstalled: false,
         userPublicKey: undefined,
         network: undefined,
@@ -60,11 +63,7 @@ export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
             if (!mina) {
                 return false;
             }
-
-            console.log(mina);
-
             const wallet = await mina.requestAccounts();
-            console.log(wallet);
             if (wallet[0]) {
                 set((state) => {
                     state.isConnected = true;
@@ -82,6 +81,7 @@ export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
                 isConnected: false,
                 userPublicKey: undefined,
             }),
+        setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
     }))
 );
 

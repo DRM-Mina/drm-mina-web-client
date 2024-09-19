@@ -35,7 +35,7 @@ export async function verifySignature(signature: SignedData) {
         throw new Error(error.message || "Failed to verify signature");
     }
     const data = await res.json();
-    localStorage.setItem("drmjwtToken", data.token);
+    localStorage.setItem("drmJwtToken", data.token);
     return data.token;
 }
 
@@ -62,7 +62,8 @@ export async function authenticateUser(publicKey: string) {
 }
 
 function getAuthHeaders() {
-    const token = localStorage.getItem("jwtToken");
+    const token = localStorage.getItem("drmJwtToken");
+    console.log("Token:", token);
     if (!token) {
         throw new Error("User is not authenticated");
     }
@@ -75,10 +76,10 @@ function getAuthHeaders() {
 export async function toggleGameWishlist(publicKey: string, gameId: number): Promise<boolean> {
     const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + "wishlist/" + publicKey, {
+    const res = await fetch(ENDPOINT + "wishlist/", {
         headers,
         method: "POST",
-        body: JSON.stringify({ gameId }),
+        body: JSON.stringify({ publicKey, gameId }),
     });
 
     const json = await res.json();
