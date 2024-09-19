@@ -13,3 +13,8 @@ coverage
 # Never reveal your keys!
 keys
 .env
+
+mock.ts
+
+src/temp/
+control.ts

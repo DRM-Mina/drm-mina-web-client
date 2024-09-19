@@ -1,19 +1,4 @@
-import {
-  PrivateKey,
-  PublicKey,
-  Mina,
-  VerificationKey,
-  UInt64,
-  UInt32,
-  Cache,
-  AccountUpdate,
-  Field,
-  Encoding,
-  Signature,
-  fetchLastBlock,
-  Bool,
-  Poseidon,
-} from 'o1js';
+import { PrivateKey, Mina, UInt64, AccountUpdate, Bool } from 'o1js';
 import { GameToken } from '../GameToken.js';
 
 const proofsEnabled = false;
