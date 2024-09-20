@@ -8,22 +8,16 @@ import { GameToken } from "drm-mina-contracts/build/src/GameToken";
 import { DRM } from "drm-mina-contracts/build/src/DRM";
 import { AccountUpdate, fetchAccount, Mina, PublicKey, UInt64 } from "o1js";
 
-type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
+// type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 const state = {
     status: "loading" as "loading" | "ready",
     deviceIdentifierProgram: null as typeof DeviceIdentifier | null,
     contracts: {
-        GameToken: {
-            contract: null as null | typeof GameToken,
-            zkapp: null as null | GameToken,
-        },
-        DRM: {
-            contract: null as null | typeof DRM,
-            zkapp: null as null | DRM,
-        },
+        GameToken: null as null | typeof GameToken,
+        DRM: null as null | typeof DRM,
     },
-    transaction: null as null | Transaction,
+    // transaction: null as null | Transaction,
 };
 export type State = typeof state;
 
@@ -38,18 +32,18 @@ const functions = {
     loadContract: async ({ contractName }: { contractName: ContractName }) => {
         if (!state.contracts[contractName])
             throw new Error(`${contractName} contract is not defined`);
-        if (!state.contracts[contractName].contract) {
+        if (!state.contracts[contractName]) {
             const contract = (await import(`drm-mina-contracts/build/src/${contractName}.js`))[
                 contractName
             ];
             if (!contract) {
                 throw new Error(`Could not load contract ${contractName} from the module`);
             }
-            state.contracts[contractName].contract = contract;
+            state.contracts[contractName] = contract;
         }
     },
     compileContract: async ({ contractName }: { contractName: ContractName }) => {
-        const contract = state.contracts[contractName]?.contract;
+        const contract = state.contracts[contractName];
         if (!contract) throw new Error(`${contractName} contract is not loaded`);
         await contract.compile();
     },
@@ -57,30 +51,31 @@ const functions = {
         await functions.loadContract(args);
         await functions.compileContract(args);
     },
-    fetchAccount: async (args: { publicKey58: string }) => {
-        const publicKey = PublicKey.fromBase58(args.publicKey58);
+    fetchAccount: async (args: { publicKey: string }) => {
+        const publicKey = PublicKey.fromBase58(args.publicKey);
         return await fetchAccount({ publicKey });
     },
-    initZkappInstance: async ({
-        publicKey58,
-        contractName,
-    }: {
-        contractName: ContractName;
-        publicKey58: string;
-    }) => {
-        const contract = state.contracts[contractName]?.contract;
-        if (!contract) throw new Error(`${contractName} contract is not loaded`);
-        state.contracts[contractName].zkapp = new contract(PublicKey.fromBase58(publicKey58));
-    },
-    getPrice: async (args: {}) => {
-        const currentPrice = await state.contracts["GameToken"].zkapp!.gamePrice.fetch();
-        const currentDiscount = await state.contracts["GameToken"].zkapp!.discount.fetch();
+    getPrice: async ({ contractPublicKey }: { contractPublicKey: string }) => {
+        const contract = state.contracts["GameToken"];
+        if (!contract) throw new Error("GameToken contract is not loaded");
+        const contractInstance = new contract(PublicKey.fromBase58(contractPublicKey));
+        const currentPrice = await contractInstance.gamePrice.fetch();
+        const currentDiscount = await contractInstance.discount.fetch();
         return JSON.stringify({
             price: currentPrice?.toString(),
             discount: currentDiscount?.toString(),
         });
     },
-    buyGame: async ({ recipient }: { recipient: string }) => {
+    buyGame: async ({
+        recipient,
+        contractPublicKey,
+    }: {
+        recipient: string;
+        contractPublicKey: string;
+    }) => {
+        const contract = state.contracts["GameToken"];
+        if (!contract) throw new Error("GameToken contract is not loaded");
+        const contractInstance = new contract(PublicKey.fromBase58(contractPublicKey));
         const sender = PublicKey.fromBase58(recipient);
         const transaction = await Mina.transaction(
             {
@@ -89,20 +84,21 @@ const functions = {
             },
             async () => {
                 AccountUpdate.fundNewAccount(sender);
-                await state.contracts["GameToken"].zkapp!.mintGameToken(sender);
+                await contractInstance.mintGameToken(sender);
             }
         );
-        state.transaction = transaction;
+        await transaction.prove();
+        return transaction.toJSON();
     },
-    proveUpdateTransaction: async (args: {}) => {
-        await state.transaction!.prove();
-    },
-    getTransactionJSON: async (args: {}) => {
-        return state.transaction!.toJSON();
-    },
+    // proveUpdateTransaction: async (args: {}) => {
+    //     await state.transaction!.prove();
+    // },
+    // getTransactionJSON: async (args: {}) => {
+    //     return state.transaction!.toJSON();
+    // },
     compileProgram: async (args: {}) => {
         state.deviceIdentifierProgram = DeviceIdentifier;
-        const deviceIdentifierKey = await DeviceIdentifier.compile();
+        await DeviceIdentifier.compile();
     },
     // createDeviceIdentifierProof: async (args: { rawIdentifiers: RawIdentifiers }) => {
     //     if (!state.deviceIdentifierProgram) {
@@ -119,14 +115,20 @@ const functions = {
         userAddress,
         rawIdentifiers,
         deviceIndex,
+        contractPublicKey,
     }: {
         userAddress: string;
         rawIdentifiers: RawIdentifiers;
         deviceIndex: number;
+        contractPublicKey: string;
     }) => {
         if (!state.deviceIdentifierProgram) {
             throw new Error("Program not compiled");
         }
+
+        const contract = state.contracts["DRM"];
+        if (!contract) throw new Error("DRM contract is not loaded");
+        const contractInstance = new contract(PublicKey.fromBase58(contractPublicKey));
 
         const identifiers = Identifiers.fromRaw(rawIdentifiers);
         const proof: DeviceIdentifierProof = await state.deviceIdentifierProgram.proofForDevice(
@@ -140,27 +142,31 @@ const functions = {
                 fee: 1e8,
             },
             async () => {
-                await state.contracts["DRM"].zkapp!.initAndAddDevice(
-                    sender,
-                    proof,
-                    UInt64.from(deviceIndex)
-                );
+                await contractInstance.initAndAddDevice(sender, proof, UInt64.from(deviceIndex));
             }
         );
-        state.transaction = transaction;
+
+        await transaction.prove();
+        return transaction.toJSON();
     },
     changeDevice: async ({
         userAddress,
         rawIdentifiers,
         deviceIndex,
+        contractPublicKey,
     }: {
         userAddress: string;
         rawIdentifiers: RawIdentifiers;
         deviceIndex: number;
+        contractPublicKey: string;
     }) => {
         if (!state.deviceIdentifierProgram) {
             throw new Error("Program not compiled");
         }
+
+        const contract = state.contracts["DRM"];
+        if (!contract) throw new Error("DRM contract is not loaded");
+        const contractInstance = new contract(PublicKey.fromBase58(contractPublicKey));
 
         const identifiers = Identifiers.fromRaw(rawIdentifiers);
         const proof: DeviceIdentifierProof = await state.deviceIdentifierProgram.proofForDevice(
@@ -174,14 +180,12 @@ const functions = {
                 fee: 1e8,
             },
             async () => {
-                await state.contracts["DRM"].zkapp!.changeDevice(
-                    sender,
-                    proof,
-                    UInt64.from(deviceIndex)
-                );
+                await contractInstance.changeDevice(sender, proof, UInt64.from(deviceIndex));
             }
         );
-        state.transaction = transaction;
+
+        await transaction.prove();
+        return transaction.toJSON();
     },
 };
 export type WorkerFunctions = keyof typeof functions;

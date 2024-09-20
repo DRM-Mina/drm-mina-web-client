@@ -27,45 +27,42 @@ export default class WorkerClient {
         return this._call("compileProgram", {});
     }
 
-    fetchAccount({ publicKey }: { publicKey: PublicKey }): ReturnType<typeof fetchAccount> {
+    fetchAccount({ publicKey }: { publicKey: string }): ReturnType<typeof fetchAccount> {
         const result = this._call("fetchAccount", {
-            publicKey58: publicKey.toBase58(),
+            publicKey,
         });
         return result as ReturnType<typeof fetchAccount>;
     }
 
-    initZkappInstance({
-        contractName,
-        publicKey,
-    }: {
-        contractName: ContractName;
-        publicKey: PublicKey;
-    }) {
-        return this._call("initZkappInstance", {
-            contractName,
-            publicKey58: publicKey.toBase58(),
+    async getPrice({ contractPublicKey }: { contractPublicKey: string }): Promise<any> {
+        const result = await this._call("getPrice", {
+            contractPublicKey,
         });
-    }
-
-    async getPrice(): Promise<any> {
-        const result = await this._call("getPrice", {});
         return JSON.parse(result as string);
     }
 
-    buyGame({ recipient }: { recipient: string }) {
-        return this._call("buyGame", {
+    async buyGame({
+        recipient,
+        contractPublicKey,
+    }: {
+        recipient: string;
+        contractPublicKey: string;
+    }) {
+        const result = await this._call("buyGame", {
             recipient,
+            contractPublicKey,
         });
-    }
-
-    proveUpdateTransaction() {
-        return this._call("proveUpdateTransaction", {});
-    }
-
-    async getTransactionJSON() {
-        const result = await this._call("getTransactionJSON", {});
         return result;
     }
+
+    // proveUpdateTransaction() {
+    //     return this._call("proveUpdateTransaction", {});
+    // }
+
+    // async getTransactionJSON() {
+    //     const result = await this._call("getTransactionJSON", {});
+    //     return result;
+    // }
 
     // createDeviceIdentifierProof({
     //     rawIdentifiers,
@@ -77,36 +74,44 @@ export default class WorkerClient {
     //     }) as Promise<any>;
     // }
 
-    initAndAddDevice({
+    async initAndAddDevice({
         userAddress,
         rawIdentifiers,
         deviceIndex,
+        contractPublicKey,
     }: {
         userAddress: string;
         rawIdentifiers: RawIdentifiers;
         deviceIndex: number;
+        contractPublicKey: string;
     }) {
-        return this._call("initAndAddDevice", {
+        const result = await this._call("initAndAddDevice", {
             userAddress,
             rawIdentifiers,
             deviceIndex,
+            contractPublicKey,
         });
+        return result;
     }
 
-    changeDevice({
+    async changeDevice({
         userAddress,
         rawIdentifiers,
         deviceIndex,
+        contractPublicKey,
     }: {
         userAddress: string;
         rawIdentifiers: RawIdentifiers;
         deviceIndex: number;
+        contractPublicKey: string;
     }) {
-        return this._call("changeDevice", {
+        const result = await this._call("changeDevice", {
             userAddress,
             rawIdentifiers,
             deviceIndex,
+            contractPublicKey,
         });
+        return result;
     }
 
     worker: Worker;

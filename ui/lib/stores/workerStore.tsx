@@ -2,13 +2,31 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
 import WorkerClient from "../workerClient";
-import { PublicKey } from "o1js";
 
 interface WorkerStoreState {
     isReady: boolean;
     isLoading: boolean;
     worker?: WorkerClient;
+
+    contractsCompiled: boolean;
+    pricesLoaded: boolean;
+
     startWorker: () => Promise<void>;
+    loadAndCompile: () => Promise<void>;
+    getPrices: () => Promise<void>;
+    buyGame: (recipient: string, contractPublicKey: string) => Promise<any>;
+    initAndAddDevice: (
+        userAddress: string,
+        rawIdentifiers: RawIdentifiers,
+        deviceIndex: number,
+        contractPublicKey: string
+    ) => Promise<any>;
+    changeDevice: (
+        userAddress: string,
+        rawIdentifiers: RawIdentifiers,
+        deviceIndex: number,
+        contractPublicKey: string
+    ) => Promise<any>;
 }
 
 async function timeout(seconds: number): Promise<void> {
@@ -23,16 +41,19 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
     immer((set) => ({
         isReady: false,
         isLoading: false,
+        worker: undefined,
+
+        contractsCompiled: false,
+        pricesLoaded: false,
+
         async startWorker() {
             console.log("Worker starting");
 
             if (this.isLoading) {
-                // console.log("Worker already loading");
                 return;
             }
 
             if (this.isReady) {
-                // console.log("Worker already ready");
                 return;
             }
 
@@ -47,26 +68,73 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
                 state.worker = worker;
             });
 
-            // await worker.compileProgram();
-            await worker.setActiveInstanceToDevnet();
-            await worker.loadAndCompileContract({ contractName: "GameToken" });
-            console.log("zkApp compiled");
-            await worker.initZkappInstance({
-                contractName: "GameToken",
-                publicKey: PublicKey.fromBase58(
-                    "B62qia82GkCuroGxy4bLxKTvMQfTm8ddyqJieZvHyJQ9NBULczpSjPz"
-                ),
-            });
-            console.log("zkApp initialized");
-
-            const price = await worker.getPrice();
-
-            console.log("Price", price);
-
             set((state) => {
                 state.isReady = true;
             });
+            console.log("Worker started");
             return;
+        },
+
+        async loadAndCompile() {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+            await this.worker.compileProgram();
+            await this.worker.compileContract({ contractName: "GameToken" });
+            await this.worker.compileContract({ contractName: "DRM" });
+        },
+
+        async getPrices() {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+        },
+
+        async buyGame(recipient: string, contractPublicKey: string) {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+
+            const json = await this.worker.buyGame({ recipient, contractPublicKey });
+            return json;
+        },
+
+        async initAndAddDevice(
+            userAddress: string,
+            rawIdentifiers: RawIdentifiers,
+            deviceIndex: number,
+            contractPublicKey: string
+        ) {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+
+            const json = await this.worker.initAndAddDevice({
+                userAddress,
+                rawIdentifiers,
+                deviceIndex,
+                contractPublicKey,
+            });
+            return json;
+        },
+
+        async changeDevice(
+            userAddress: string,
+            rawIdentifiers: RawIdentifiers,
+            deviceIndex: number,
+            contractPublicKey: string
+        ) {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+
+            const json = await this.worker.changeDevice({
+                userAddress,
+                rawIdentifiers,
+                deviceIndex,
+                contractPublicKey,
+            });
+            return json;
         },
     }))
 );
