@@ -51,8 +51,8 @@ dependencies:
     specifier: ^2.1.1
     version: 2.1.1
   drm-mina-contracts:
-    specifier: ^0.2.0
-    version: 0.2.0(o1js@1.7.0)
+    specifier: ^0.3.1
+    version: 0.3.1(o1js@1.7.0)
   embla-carousel-autoplay:
     specifier: ^8.3.0
     version: 8.3.0(embla-carousel@8.3.0)
@@ -1707,8 +1707,8 @@ packages:
     engines: {node: '>=12'}
     dev: false
 
-  /drm-mina-contracts@0.2.0(o1js@1.7.0):
-    resolution: {integrity: sha512-SJZTphVK/ol/uGdxVeohuhVkvXT5FL5wqKFmpbYqFAZy1qBatEHa475pekMa2f+1uB3Kj2htf8EX2IU9TJhGGQ==}
+  /drm-mina-contracts@0.3.1(o1js@1.7.0):
+    resolution: {integrity: sha512-dEHyx8PauGgl7YpvRfbpvqbnRReC8uCoGkJdUjS4Q2rmELjWbRO4FBLoVPs7ru/L2Z5XMgxFIpaUVwxBWtunLQ==}
     engines: {node: '>=18.14.0'}
     peerDependencies:
       o1js: ^1.*

@@ -67,14 +67,46 @@ export default class WorkerClient {
         return result;
     }
 
-    createDeviceIdentifierProof({
+    // createDeviceIdentifierProof({
+    //     rawIdentifiers,
+    // }: {
+    //     rawIdentifiers: RawIdentifiers;
+    // }): Promise<any> {
+    //     return this._call("createDeviceIdentifierProof", {
+    //         rawIdentifiers,
+    //     }) as Promise<any>;
+    // }
+
+    initAndAddDevice({
+        userAddress,
         rawIdentifiers,
+        deviceIndex,
     }: {
+        userAddress: string;
         rawIdentifiers: RawIdentifiers;
-    }): Promise<any> {
-        return this._call("createDeviceIdentifierProof", {
+        deviceIndex: number;
+    }) {
+        return this._call("initAndAddDevice", {
+            userAddress,
             rawIdentifiers,
-        }) as Promise<any>;
+            deviceIndex,
+        });
+    }
+
+    changeDevice({
+        userAddress,
+        rawIdentifiers,
+        deviceIndex,
+    }: {
+        userAddress: string;
+        rawIdentifiers: RawIdentifiers;
+        deviceIndex: number;
+    }) {
+        return this._call("changeDevice", {
+            userAddress,
+            rawIdentifiers,
+            deviceIndex,
+        });
     }
 
     worker: Worker;

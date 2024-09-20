@@ -5,7 +5,8 @@ import {
     DeviceIdentifierProof,
 } from "drm-mina-contracts/build/src/lib/DeviceIdentifierProof";
 import { GameToken } from "drm-mina-contracts/build/src/GameToken";
-import { AccountUpdate, fetchAccount, Mina, PublicKey } from "o1js";
+import { DRM } from "drm-mina-contracts/build/src/DRM";
+import { AccountUpdate, fetchAccount, Mina, PublicKey, UInt64 } from "o1js";
 
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
@@ -17,9 +18,12 @@ const state = {
             contract: null as null | typeof GameToken,
             zkapp: null as null | GameToken,
         },
+        DRM: {
+            contract: null as null | typeof DRM,
+            zkapp: null as null | DRM,
+        },
     },
     transaction: null as null | Transaction,
-    // verificationKey: null as string | null,
 };
 export type State = typeof state;
 
@@ -68,7 +72,6 @@ const functions = {
         if (!contract) throw new Error(`${contractName} contract is not loaded`);
         state.contracts[contractName].zkapp = new contract(PublicKey.fromBase58(publicKey58));
     },
-
     getPrice: async (args: {}) => {
         const currentPrice = await state.contracts["GameToken"].zkapp!.gamePrice.fetch();
         const currentDiscount = await state.contracts["GameToken"].zkapp!.discount.fetch();
@@ -97,22 +100,88 @@ const functions = {
     getTransactionJSON: async (args: {}) => {
         return state.transaction!.toJSON();
     },
-
     compileProgram: async (args: {}) => {
         state.deviceIdentifierProgram = DeviceIdentifier;
         const deviceIdentifierKey = await DeviceIdentifier.compile();
-        // state.verificationKey = deviceIdentifierKey.verificationKey.data
     },
-    createDeviceIdentifierProof: async (args: { rawIdentifiers: RawIdentifiers }) => {
+    // createDeviceIdentifierProof: async (args: { rawIdentifiers: RawIdentifiers }) => {
+    //     if (!state.deviceIdentifierProgram) {
+    //         throw new Error("Program not compiled");
+    //     }
+
+    //     const identifiers = Identifiers.fromRaw(args.rawIdentifiers);
+    //     const proof: DeviceIdentifierProof = await state.deviceIdentifierProgram.proofForDevice(
+    //         identifiers
+    //     );
+    //     return JSON.stringify(proof.toJSON(), null, 2);
+    // },
+    initAndAddDevice: async ({
+        userAddress,
+        rawIdentifiers,
+        deviceIndex,
+    }: {
+        userAddress: string;
+        rawIdentifiers: RawIdentifiers;
+        deviceIndex: number;
+    }) => {
         if (!state.deviceIdentifierProgram) {
             throw new Error("Program not compiled");
         }
 
-        const identifiers = Identifiers.fromRaw(args.rawIdentifiers);
+        const identifiers = Identifiers.fromRaw(rawIdentifiers);
         const proof: DeviceIdentifierProof = await state.deviceIdentifierProgram.proofForDevice(
             identifiers
         );
-        return JSON.stringify(proof.toJSON(), null, 2);
+
+        const sender = PublicKey.fromBase58(userAddress);
+        const transaction = await Mina.transaction(
+            {
+                sender: sender,
+                fee: 1e8,
+            },
+            async () => {
+                await state.contracts["DRM"].zkapp!.initAndAddDevice(
+                    sender,
+                    proof,
+                    UInt64.from(deviceIndex)
+                );
+            }
+        );
+        state.transaction = transaction;
+    },
+    changeDevice: async ({
+        userAddress,
+        rawIdentifiers,
+        deviceIndex,
+    }: {
+        userAddress: string;
+        rawIdentifiers: RawIdentifiers;
+        deviceIndex: number;
+    }) => {
+        if (!state.deviceIdentifierProgram) {
+            throw new Error("Program not compiled");
+        }
+
+        const identifiers = Identifiers.fromRaw(rawIdentifiers);
+        const proof: DeviceIdentifierProof = await state.deviceIdentifierProgram.proofForDevice(
+            identifiers
+        );
+
+        const sender = PublicKey.fromBase58(userAddress);
+        const transaction = await Mina.transaction(
+            {
+                sender: sender,
+                fee: 1e8,
+            },
+            async () => {
+                await state.contracts["DRM"].zkapp!.changeDevice(
+                    sender,
+                    proof,
+                    UInt64.from(deviceIndex)
+                );
+            }
+        );
+        state.transaction = transaction;
     },
 };
 export type WorkerFunctions = keyof typeof functions;
