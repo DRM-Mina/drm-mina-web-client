@@ -8,12 +8,11 @@ interface WorkerStoreState {
     isLoading: boolean;
     worker?: WorkerClient;
 
-    contractsCompiled: boolean;
+    gameTokenCompiled: boolean;
     pricesLoaded: boolean;
 
     startWorker: () => Promise<void>;
-    loadAndCompile: () => Promise<void>;
-    getPrices: () => Promise<void>;
+    getPrice: (contractPublicKey: string) => Promise<void>;
     buyGame: (recipient: string, contractPublicKey: string) => Promise<any>;
     initAndAddDevice: (
         userAddress: string,
@@ -43,11 +42,11 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
         isLoading: false,
         worker: undefined,
 
-        contractsCompiled: false,
+        gameTokenCompiled: false,
         pricesLoaded: false,
 
         async startWorker() {
-            console.log("Worker starting");
+            console.time("Worker started");
 
             if (this.isLoading) {
                 return;
@@ -71,23 +70,33 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
             set((state) => {
                 state.isReady = true;
             });
-            console.log("Worker started");
+            console.timeEnd("Worker started");
+
+            console.time("Active instance set to devnet");
+            await worker.setActiveInstanceToDevnet();
+            console.timeEnd("Active instance set to devnet");
+
+            // console.time("DeviceIdentifierProgram compiled");
+            // await worker.compileProgram();
+            // console.timeEnd("DeviceIdentifierProgram compiled");
+
+            console.time("GameToken contract compiled");
+            await worker.loadAndCompileGameTokenContract();
+            console.timeEnd("GameToken contract compiled");
+
+            set((state) => {
+                state.gameTokenCompiled = true;
+            });
             return;
         },
 
-        async loadAndCompile() {
+        async getPrice(contractPublicKey: string) {
             if (!this.worker) {
                 throw new Error("Worker not ready");
             }
-            await this.worker.compileProgram();
-            await this.worker.compileContract({ contractName: "GameToken" });
-            await this.worker.compileContract({ contractName: "DRM" });
-        },
 
-        async getPrices() {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
+            const json = await this.worker.getPrice({ contractPublicKey });
+            return json;
         },
 
         async buyGame(recipient: string, contractPublicKey: string) {
@@ -109,13 +118,13 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
                 throw new Error("Worker not ready");
             }
 
-            const json = await this.worker.initAndAddDevice({
-                userAddress,
-                rawIdentifiers,
-                deviceIndex,
-                contractPublicKey,
-            });
-            return json;
+            // const json = await this.worker.initAndAddDevice({
+            //     userAddress,
+            //     rawIdentifiers,
+            //     deviceIndex,
+            //     contractPublicKey,
+            // });
+            // return json;
         },
 
         async changeDevice(
@@ -128,13 +137,13 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
                 throw new Error("Worker not ready");
             }
 
-            const json = await this.worker.changeDevice({
-                userAddress,
-                rawIdentifiers,
-                deviceIndex,
-                contractPublicKey,
-            });
-            return json;
+            // const json = await this.worker.changeDevice({
+            //     userAddress,
+            //     rawIdentifiers,
+            //     deviceIndex,
+            //     contractPublicKey,
+            // });
+            // return json;
         },
     }))
 );

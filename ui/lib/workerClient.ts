@@ -1,26 +1,20 @@
-import { fetchAccount, PublicKey } from "o1js";
-import type {
-    ZkappWorkerRequest,
-    ZkappWorkerReponse,
-    WorkerFunctions,
-    ContractName,
-} from "./worker";
+import { fetchAccount } from "o1js";
+import type { ZkappWorkerRequest, ZkappWorkerReponse, WorkerFunctions } from "./worker";
 
 export default class WorkerClient {
     setActiveInstanceToDevnet() {
         return this._call("setActiveInstanceToDevnet", {});
     }
 
-    loadAndCompileContract(args: { contractName: ContractName }) {
-        return this._call("loadAndCompileContract", args);
+    loadAndCompileGameTokenContract() {
+        return this._call("loadAndCompileGameTokenContract", {});
     }
 
-    loadContract(args: { contractName: ContractName }) {
-        return this._call("loadContract", args);
-    }
-
-    compileContract(args: { contractName: ContractName }) {
-        return this._call("compileContract", args);
+    async getGameTokenInstance({ contractAddress }: { contractAddress: string }) {
+        const result = await this._call("getGameTokenInstance", {
+            contractAddress,
+        });
+        return result;
     }
 
     compileProgram() {
@@ -55,64 +49,45 @@ export default class WorkerClient {
         return result;
     }
 
-    // proveUpdateTransaction() {
-    //     return this._call("proveUpdateTransaction", {});
-    // }
-
-    // async getTransactionJSON() {
-    //     const result = await this._call("getTransactionJSON", {});
+    // async initAndAddDevice({
+    //     userAddress,
+    //     rawIdentifiers,
+    //     deviceIndex,
+    //     contractPublicKey,
+    // }: {
+    //     userAddress: string;
+    //     rawIdentifiers: RawIdentifiers;
+    //     deviceIndex: number;
+    //     contractPublicKey: string;
+    // }) {
+    //     const result = await this._call("initAndAddDevice", {
+    //         userAddress,
+    //         rawIdentifiers,
+    //         deviceIndex,
+    //         contractPublicKey,
+    //     });
     //     return result;
     // }
 
-    // createDeviceIdentifierProof({
+    // async changeDevice({
+    //     userAddress,
     //     rawIdentifiers,
+    //     deviceIndex,
+    //     contractPublicKey,
     // }: {
+    //     userAddress: string;
     //     rawIdentifiers: RawIdentifiers;
-    // }): Promise<any> {
-    //     return this._call("createDeviceIdentifierProof", {
+    //     deviceIndex: number;
+    //     contractPublicKey: string;
+    // }) {
+    //     const result = await this._call("changeDevice", {
+    //         userAddress,
     //         rawIdentifiers,
-    //     }) as Promise<any>;
+    //         deviceIndex,
+    //         contractPublicKey,
+    //     });
+    //     return result;
     // }
-
-    async initAndAddDevice({
-        userAddress,
-        rawIdentifiers,
-        deviceIndex,
-        contractPublicKey,
-    }: {
-        userAddress: string;
-        rawIdentifiers: RawIdentifiers;
-        deviceIndex: number;
-        contractPublicKey: string;
-    }) {
-        const result = await this._call("initAndAddDevice", {
-            userAddress,
-            rawIdentifiers,
-            deviceIndex,
-            contractPublicKey,
-        });
-        return result;
-    }
-
-    async changeDevice({
-        userAddress,
-        rawIdentifiers,
-        deviceIndex,
-        contractPublicKey,
-    }: {
-        userAddress: string;
-        rawIdentifiers: RawIdentifiers;
-        deviceIndex: number;
-        contractPublicKey: string;
-    }) {
-        const result = await this._call("changeDevice", {
-            userAddress,
-            rawIdentifiers,
-            deviceIndex,
-            contractPublicKey,
-        });
-        return result;
-    }
 
     worker: Worker;
 
