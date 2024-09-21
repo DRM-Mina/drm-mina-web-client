@@ -37,12 +37,18 @@ const [publisher, alice, bob, charlie, david] = localChain.testAccounts;
 
 const GameTokenPk = PrivateKey.random();
 const GameTokenAddr = GameTokenPk.toPublicKey();
+const GameTokenPk2 = PrivateKey.random();
+const GameTokenAddr2 = GameTokenPk2.toPublicKey();
 
 const DRMPk = PrivateKey.random();
 const DRMAddr = DRMPk.toPublicKey();
+const DRMPk2 = PrivateKey.random();
+const DRMAddr2 = DRMPk2.toPublicKey();
 
 const GameTokenInstance = new GameToken(GameTokenAddr);
+const GameTokenInstance2 = new GameToken(GameTokenAddr2);
 const DRMInstance = new DRM(DRMAddr);
+const DRMInstance2 = new DRM(DRMAddr2);
 
 offchainState.setContractInstance(DRMInstance);
 
@@ -91,7 +97,42 @@ deployTx.sign([publisher.key, GameTokenPk, DRMPk]);
 
 await deployTx.prove();
 await deployTx.send();
-console.timeEnd('Deploying GameToken and DRM ');
+console.timeEnd('Deploying GameToken and DRM');
+
+offchainState.setContractInstance(DRMInstance2);
+
+console.time('Deploying GameToken and DRM2');
+const deployTx2 = await Mina.transaction(
+  {
+    sender: publisher,
+    fee: 1e8,
+  },
+  async () => {
+    AccountUpdate.fundNewAccount(publisher, 3);
+    await GameTokenInstance2.deploy({
+      symbol: 'tokB',
+      src: '',
+    });
+    await GameTokenInstance2.initialize(
+      publisher,
+      UInt64.from(GAMEPRICE),
+      UInt64.from(DISCOUNT),
+      UInt64.from(TIMEOUTINTERVAL),
+      UInt64.from(MAXTREEHEIGHT),
+      Bool(false)
+    );
+    await DRMInstance2.deploy();
+    await DRMInstance2.initialize(GameTokenAddr2);
+  }
+);
+
+deployTx2.sign([publisher.key, GameTokenPk2, DRMPk2]);
+
+await deployTx2.prove();
+await deployTx2.send();
+console.timeEnd('Deploying GameToken and DRM2');
+
+offchainState.setContractInstance(DRMInstance);
 
 console.time('Alice buys a game');
 
@@ -115,7 +156,7 @@ aliceTx.sign([alice.key]);
 
 await aliceTx.prove();
 await aliceTx.send();
-console.timeEnd('Alice buys a game ...');
+console.timeEnd('Alice buys a game');
 
 const aliceMinaBalanceAfter = Mina.getBalance(alice).toBigInt();
 const aliceGameTokenBalanceAfter = await GameTokenInstance.getBalanceOf(alice);
@@ -144,6 +185,56 @@ console.log(
   'Publisher Mina balance diff:',
   publisherMinaBalanceAfter - publisherMinaBalanceBefore
 );
+
+console.time('Alice buys a game2');
+
+const aliceMinaBalanceBefore2 = Mina.getBalance(alice).toBigInt();
+const aliceGameTokenBalanceBefore2 = await GameTokenInstance2.getBalanceOf(
+  alice
+);
+
+const publisherMinaBalanceBefore2 = Mina.getBalance(publisher).toBigInt();
+
+const aliceTx2 = await Mina.transaction(
+  {
+    sender: alice,
+    fee: 1e8,
+  },
+  async () => {
+    AccountUpdate.fundNewAccount(alice);
+    await GameTokenInstance2.mintGameToken(alice);
+  }
+);
+
+aliceTx2.sign([alice.key]);
+
+await aliceTx2.prove();
+await aliceTx2.send();
+console.timeEnd('Alice buys a game2');
+
+const aliceMinaBalanceAfter2 = Mina.getBalance(alice).toBigInt();
+const aliceGameTokenBalanceAfter2 = await GameTokenInstance2.getBalanceOf(
+  alice
+);
+
+const publisherMinaBalanceAfter2 = Mina.getBalance(publisher).toBigInt();
+
+console.log('Alice Mina balance before:', aliceMinaBalanceBefore2);
+console.log('Alice Mina balance after:', aliceMinaBalanceAfter2);
+
+console.log(
+  'Alice GameToken balance before:',
+  aliceGameTokenBalanceBefore2.toString()
+);
+
+console.log(
+  'Alice GameToken balance after:',
+  aliceGameTokenBalanceAfter2.toString()
+);
+
+console.log('Publisher Mina balance before:', publisherMinaBalanceBefore2);
+
+console.log('Publisher Mina balance after:', publisherMinaBalanceAfter2);
 
 const AliceDeviceRaw = mockIdentifiers[0];
 const AliceDeviceIdentifiers = Identifiers.fromRaw(AliceDeviceRaw);
@@ -185,6 +276,10 @@ console.timeEnd('Setttling');
 const aliceDevices = await offchainState.fields.devices.get(alice);
 console.log('Alice devices:', aliceDevices.value.device_1.toString());
 
+console.log('Other DRM instance');
+offchainState.setContractInstance(DRMInstance2);
+offchainState.compile();
+
 const AliceDeviceRaw2 = mockIdentifiers[1];
 const AliceDeviceIdentifiers2 = Identifiers.fromRaw(AliceDeviceRaw2);
 
@@ -202,7 +297,7 @@ const registerDeviceTx2 = await Mina.transaction(
     fee: 1e8,
   },
   async () => {
-    await DRMInstance.changeDevice(alice, deviceIdentifier2, UInt64.from(2));
+    await DRMInstance2.changeDevice(alice, deviceIdentifier2, UInt64.from(2));
   }
 );
 
@@ -216,7 +311,7 @@ console.time('Setttling');
 
 proof = await offchainState.createSettlementProof();
 const txnProof2 = await Mina.transaction(alice, async () => {
-  await DRMInstance.settle(proof);
+  await DRMInstance2.settle(proof);
 });
 await txnProof2.prove();
 await txnProof2.sign([alice.key]).send();
@@ -229,3 +324,41 @@ console.log(
   aliceDevices2.value.device_1.toString(),
   aliceDevices2.value.device_2.toString()
 );
+
+// const AliceDeviceRaw3 = mockIdentifiers[2];
+// const AliceDeviceIdentifiers3 = Identifiers.fromRaw(AliceDeviceRaw3);
+
+// console.time('Device identifier proof create');
+// const deviceIdentifier3 = await DeviceIdentifier.proofForDevice(
+//   AliceDeviceIdentifiers3
+// );
+
+// console.timeEnd('Device identifier proof create');
+
+// console.time('Alice registers a device');
+// const registerDeviceTx3 = await Mina.transaction(
+//   {
+//     sender: alice,
+//     fee: 1e8,
+//   },
+//   async () => {
+//     await DRMInstance.changeDevice(alice, deviceIdentifier3, UInt64.from(3));
+//   }
+// );
+
+// registerDeviceTx3.sign([alice.key, DRMPk]);
+
+// await registerDeviceTx3.prove();
+// await registerDeviceTx3.send();
+// console.timeEnd('Alice registers a device');
+
+// console.time('Setttling');
+
+// proof = await offchainState.createSettlementProof();
+// const txnProof3 = await Mina.transaction(alice, async () => {
+//   await DRMInstance.settle(proof);
+// });
+// await txnProof3.prove();
+// await txnProof3.sign([alice.key]).send();
+
+// console.timeEnd('Setttling');

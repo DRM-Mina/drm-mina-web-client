@@ -9,10 +9,10 @@ Mina.setActiveInstance(Network);
 
 const transactionFee = 100_000_000;
 const proofsEnabled = false;
-const GAMEPRICE = 10000;
-const DISCOUNT = 1000;
-const TIMEOUTINTERVAL = 100;
-const MAXTREEHEIGHT = 2;
+const GAMEPRICE = 15_000_000_000;
+const DISCOUNT = 5_000_000_000;
+const TIMEOUTINTERVAL = 10000;
+const MAXDEVICEALLOWED = 4;
 
 // @ts-ignore
 const publisherPrivateKey = PrivateKey.fromBase58(process.env.PUBLISHER_KEY);
@@ -43,7 +43,7 @@ const deployTx = await Mina.transaction(
       UInt64.from(GAMEPRICE),
       UInt64.from(DISCOUNT),
       UInt64.from(TIMEOUTINTERVAL),
-      UInt64.from(MAXTREEHEIGHT),
+      UInt64.from(MAXDEVICEALLOWED),
       Bool(false)
     );
   }
