@@ -271,17 +271,29 @@ export default function GameDetail() {
                 <div className=" col-span-2 p-8">
                     <h3 className=" font-semibold">Contract Adresses</h3>
                     <Separator />
-                    <div className=" mt-4 text-sm">
-                        <ul>
-                            <li>
-                                <span className=" font-semibold">Game Token Address:</span>{" "}
+                    <div className=" mt-4 gap-2 flex flex-col text-sm">
+                        <div>
+                            <span className=" font-semibold">Game Token Contract Address: </span>
+                            <a
+                                href={`https://minascan.io/devnet/account/${game?.gameTokenContractAddress}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className=" text-sm font-normal underline underline-offset-4"
+                            >
                                 {game?.gameTokenContractAddress}
-                            </li>
-                            <li>
-                                <span className=" font-semibold">DRM Address:</span>{" "}
+                            </a>
+                        </div>
+                        <div>
+                            <span className=" font-semibold">DRM Contract Address: </span>
+                            <a
+                                href={`https://minascan.io/devnet/account/${game?.DRMContractAddress}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className=" text-sm font-normal underline underline-offset-4"
+                            >
                                 {game?.DRMContractAddress}
-                            </li>
-                        </ul>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div className=" col-span-1"></div>
