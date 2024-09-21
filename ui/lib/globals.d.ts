@@ -34,6 +34,8 @@ declare global {
         creator: string;
         imageFolder: string;
         imageCount: number;
+        gameTokenContractAddress: string;
+        DRMContractAddress: string;
         price: number;
         discount: number;
         tags: string[];

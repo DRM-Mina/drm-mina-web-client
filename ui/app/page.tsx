@@ -5,15 +5,19 @@ import { useDeviceStore } from "@/lib/stores/deviceStore";
 import Store from "@/app/store/page";
 import { useObserveGames } from "@/lib/stores/gameStore";
 import { useWalletStore } from "@/lib/stores/walletStore";
+import { useWorkerStore } from "@/lib/stores/workerStore";
+import { useToast } from "@/components/ui/use-toast";
+import useHasMounted from "@/lib/customHooks";
 
 export default function Home() {
     const gameName = useSearchParams()?.get("game");
     const device = useSearchParams()?.get("device");
-
+    const workerStore = useWorkerStore();
     const router = useRouter();
     const deviceStore = useDeviceStore();
     const walletStore = useWalletStore();
     useObserveGames();
+    const { toast } = useToast();
 
     useEffect(() => {
         if (device || gameName) {
@@ -28,6 +32,24 @@ export default function Home() {
         walletStore.initializeWallet();
         walletStore.observeWalletChange();
     }, []);
+
+    const hasMounted = useHasMounted();
+    useEffect(() => {
+        (async () => {
+            if (workerStore.isLoading || workerStore.isReady) {
+                return;
+            }
+            toast({
+                title: "Web workers compiling contracts",
+                description: "Web workers are compiling contracts, please wait",
+            });
+            await workerStore.startWorker();
+            toast({
+                title: "Web workers ready",
+                description: "Web workers are ready",
+            });
+        })();
+    }, [hasMounted]);
 
     return <Store />;
 }

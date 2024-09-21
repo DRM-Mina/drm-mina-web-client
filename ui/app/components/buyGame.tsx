@@ -5,66 +5,75 @@ import { useUserStore } from "@/lib/stores/userStore";
 import { useWalletStore } from "@/lib/stores/walletStore";
 import { useWorkerStore } from "@/lib/stores/workerStore";
 
-import { Check } from "lucide-react";
-import React, { useEffect } from "react";
+import { Check, Loader2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 interface BuyGameProps {
-    gameId: number | undefined;
+    game: Game | undefined;
 }
 
-export default function BuyGame({ gameId }: BuyGameProps) {
+export default function BuyGame({ game }: BuyGameProps) {
     const workerStore = useWorkerStore();
     const walletStore = useWalletStore();
     const userStore = useUserStore();
 
     const { toast } = useToast();
+    const [isReady, setIsReady] = useState(false);
 
     const hasMounted = useHasMounted();
+
     useEffect(() => {
-        if (hasMounted && !workerStore.isReady) {
-            toast({
-                title: "Web workers loading",
-                description:
-                    "Our web workers working hard to getting ready things up, computer's fans could speed up a little 😬",
-            });
-            (async () => {
-                if (workerStore.isLoading || workerStore.isReady) {
-                    return;
-                }
-
-                await workerStore.startWorker();
-
-                toast({
-                    title: "Web workers loaded",
-                    description: "Web workers are ready",
-                });
-            })();
+        if (workerStore.gameTokenCompiled) {
+            setIsReady(true);
         }
-    }, [hasMounted]);
+    }, [hasMounted, workerStore.gameTokenCompiled]);
 
     const handleGameBuy = async () => {
         let transactionFee = 0.1;
 
-        if (workerStore.isReady && walletStore.userPublicKey) {
-            await workerStore.worker?.buyGame({ recipient: walletStore.userPublicKey });
-
-            console.log("Creating proof...");
-            await workerStore.worker?.proveUpdateTransaction();
-
-            console.log("Requesting send transaction...");
-            const transactionJSON = await workerStore.worker?.getTransactionJSON();
-
-            console.log("Getting transaction JSON...");
-            const { hash } = await (window as any).mina.sendTransaction({
-                transaction: transactionJSON,
-                feePayer: {
-                    fee: transactionFee,
-                    memo: "",
-                },
+        if (!walletStore.userPublicKey) {
+            toast({
+                title: "Please connect your wallet",
+                description: "Please connect your wallet to buy the game",
             });
+            return;
+        }
+        if (
+            workerStore.isReady &&
+            walletStore.userPublicKey &&
+            game &&
+            workerStore.gameTokenCompiled
+        ) {
+            try {
+                setIsReady(false);
+                const transactionJSON = await workerStore.buyGame(
+                    walletStore.userPublicKey,
+                    game?.gameTokenContractAddress
+                );
 
-            const transactionLink = `https://minascan.io/devnet/tx/${hash}`;
-            console.log(`View transaction at ${transactionLink}`);
+                console.log("Getting transaction JSON...");
+                const { hash } = await (window as any).mina.sendTransaction({
+                    transaction: transactionJSON,
+                    feePayer: {
+                        fee: transactionFee,
+                        memo: "",
+                    },
+                });
+                setIsReady(true);
+
+                const transactionLink = `https://minascan.io/devnet/tx/${hash}`;
+                toast({
+                    title: "Transaction sent",
+                    description: `Transaction sent, check it out at ${transactionLink}`,
+                });
+            } catch (error) {
+                setIsReady(true);
+                console.error("Error buying game: ", error);
+                toast({
+                    title: "Error buying game",
+                    description: "There was an error buying the game, please try again later",
+                });
+            }
         } else {
             toast({
                 title: "Web workers not ready",
@@ -73,15 +82,23 @@ export default function BuyGame({ gameId }: BuyGameProps) {
         }
     };
 
-    return !userStore.library.includes(gameId || -1) ? (
+    return !userStore.library.includes(game?.gameId || -1) ? (
         <Button
             variant={"default"}
             onClick={(event) => {
                 event.stopPropagation();
                 handleGameBuy();
             }}
+            disabled={!isReady}
         >
-            Buy Game
+            {!isReady ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {/* Spinner */}
+                    Loading...
+                </>
+            ) : (
+                "Buy Game"
+            )}
         </Button>
     ) : (
         <div className=" flex flex-row items-center text-green-700">

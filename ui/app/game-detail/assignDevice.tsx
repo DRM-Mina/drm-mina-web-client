@@ -28,46 +28,25 @@ export default function AssignDevice({ gameId }: AssignDeviceProps) {
         setSlotNames(userStore.slotNames);
     }, [userStore.slotNames, walletStore.userPublicKey]);
 
-    const hasMounted = useHasMounted();
-    useEffect(() => {
-        if (
-            hasMounted &&
-            !workerStore.isReady
-            // TODO: enable in prod
-            // && deviceStore.isDeviceSet
-        ) {
-            toast({
-                title: "Web workers loading",
-                description:
-                    "Our web workers working hard to getting ready things up, computer's fans could speed up a little 😬",
-            });
-            (async () => {
-                if (workerStore.isLoading || workerStore.isReady) {
-                    return;
-                }
-
-                await workerStore.startWorker();
-
-                toast({
-                    title: "Web workers loaded",
-                    description: "Web workers are ready",
-                });
-            })();
-        }
-    }, [hasMounted]);
-
     useEffect(() => {
         if (
             // TODO: enable in prod
             // deviceStore.isDeviceSet &&
             workerStore.isReady &&
+            workerStore.contractsCompiled &&
             walletStore.isConnected &&
             userStore.library.includes(gameId) &&
             userStore.gameId === gameId
         ) {
             setCanAssign(true);
         }
-    }, [walletStore.isConnected, userStore.library, userStore.gameId, workerStore.isReady]);
+    }, [
+        walletStore.isConnected,
+        userStore.library,
+        userStore.gameId,
+        workerStore.isReady,
+        workerStore.contractsCompiled,
+    ]);
 
     return (
         <div className=" col-span-3">

@@ -30,8 +30,12 @@ export const useObserveGames = () => {
                 if (!game.imageFolder) {
                     game.imageFolder = "default";
                 }
+                if (game.discount > 0) {
+                    discountGames.push(game);
+                }
             });
             gameStore.setGames(games);
+            gameStore.setDiscountGames(discountGames);
         })();
     }, []);
 };
