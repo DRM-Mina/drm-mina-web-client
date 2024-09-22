@@ -1,5 +1,9 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { useWalletStore } from "./walletStore";
+import { useGamesStore } from "./gameStore";
+import { useEffect, useState } from "react";
+import { useWorkerStore } from "./workerStore";
 
 interface UserState {
     wishlist: number[];
@@ -55,3 +59,30 @@ export const useUserStore = create<UserState, [["zustand/immer", never]]>(
         },
     }))
 );
+
+export const useObserveUserLibrary = () => {
+    const walletStore = useWalletStore();
+    const userStore = useUserStore();
+    const gameStore = useGamesStore();
+    const workerStore = useWorkerStore();
+    const [fetching, setFetching] = useState(false);
+
+    useEffect(() => {
+        (async () => {
+            if (walletStore.userPublicKey && workerStore.isReady && !fetching) {
+                setFetching(true);
+                const games = gameStore.games;
+                for (const game of games) {
+                    const isOwned = await workerStore.getTokenOwnership(
+                        walletStore.userPublicKey,
+                        game.gameTokenContractAddress
+                    );
+                    if (isOwned) {
+                        userStore.setLibrary([...userStore.library, game.gameId]);
+                    }
+                }
+                setFetching(false);
+            }
+        })();
+    }, [walletStore.userPublicKey, workerStore.isReady]);
+};

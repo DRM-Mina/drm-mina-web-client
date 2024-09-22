@@ -6,7 +6,7 @@ import {
 } from "drm-mina-contracts/build/src/lib/DeviceIdentifierProof";
 import { GameToken } from "drm-mina-contracts/build/src/GameToken";
 import { DRM } from "drm-mina-contracts/build/src/DRM";
-import { AccountUpdate, fetchAccount, Mina, PublicKey, UInt64 } from "o1js";
+import { AccountUpdate, fetchAccount, Mina, PublicKey, TokenId, UInt64 } from "o1js";
 import { offchainState } from "drm-mina-contracts";
 
 // type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
@@ -81,9 +81,32 @@ const functions = {
     //         offchainState.compile();
     // },
 
-    fetchAccount: async (args: { publicKey: string }) => {
+    fetchAccount: async (args: { publicKey: string; tokenId?: string }) => {
         const publicKey = PublicKey.fromBase58(args.publicKey);
-        return await fetchAccount({ publicKey });
+        return await fetchAccount({
+            publicKey,
+            tokenId: args.tokenId ? TokenId.fromBase58(args.tokenId) : undefined,
+        });
+    },
+    getTokenOwnership: async ({
+        userAddress,
+        contractPublicKey,
+    }: {
+        userAddress: string;
+        contractPublicKey: string;
+    }) => {
+        try {
+            const publicKey = PublicKey.fromBase58(userAddress);
+            const tokenId = TokenId.derive(PublicKey.fromBase58(contractPublicKey));
+            await fetchAccount({
+                publicKey,
+                tokenId,
+            });
+            const balance = Mina.getBalance(publicKey, tokenId);
+            return balance.toString();
+        } catch (e) {
+            return "0";
+        }
     },
     getPrice: async ({ contractPublicKey }: { contractPublicKey: string }) => {
         const contractInstance = await functions.getGameTokenInstance({

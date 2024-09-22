@@ -8,6 +8,7 @@ import { useWalletStore } from "@/lib/stores/walletStore";
 import { useWorkerStore } from "@/lib/stores/workerStore";
 import { useToast } from "@/components/ui/use-toast";
 import useHasMounted from "@/lib/customHooks";
+import { useObserveUserLibrary } from "@/lib/stores/userStore";
 
 export default function Home() {
     const gameName = useSearchParams()?.get("game");
@@ -50,6 +51,8 @@ export default function Home() {
             });
         })();
     }, [hasMounted]);
+
+    useObserveUserLibrary();
 
     return <Store />;
 }

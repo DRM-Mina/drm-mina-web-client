@@ -13,6 +13,7 @@ interface WorkerStoreState {
 
     startWorker: () => Promise<void>;
     getPrice: (contractPublicKey: string) => Promise<void>;
+    getTokenOwnership: (userAddress: string, contractPublicKey: string) => Promise<boolean>;
     buyGame: (recipient: string, contractPublicKey: string) => Promise<any>;
     initAndAddDevice: (
         userAddress: string,
@@ -67,15 +68,14 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
                 state.worker = worker;
             });
 
-            set((state) => {
-                state.isReady = true;
-            });
-            console.timeEnd("Worker started");
-
             console.time("Active instance set to devnet");
             await worker.setActiveInstanceToDevnet();
             console.timeEnd("Active instance set to devnet");
 
+            set((state) => {
+                state.isReady = true;
+            });
+            console.timeEnd("Worker started");
             // console.time("DeviceIdentifierProgram compiled");
             // await worker.compileProgram();
             // console.timeEnd("DeviceIdentifierProgram compiled");
@@ -97,6 +97,16 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
 
             const json = await this.worker.getPrice({ contractPublicKey });
             return json;
+        },
+
+        async getTokenOwnership(userAddress: string, contractPublicKey: string) {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+            console.log("Getting token ownership", userAddress, contractPublicKey);
+            const balance = await this.worker.getTokenOwnership({ userAddress, contractPublicKey });
+            console.log("Balance: ", balance);
+            return Number(balance) > 0;
         },
 
         async buyGame(recipient: string, contractPublicKey: string) {

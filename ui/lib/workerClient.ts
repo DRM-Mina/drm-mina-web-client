@@ -21,11 +21,32 @@ export default class WorkerClient {
         return this._call("compileProgram", {});
     }
 
-    fetchAccount({ publicKey }: { publicKey: string }): ReturnType<typeof fetchAccount> {
+    fetchAccount({
+        publicKey,
+        tokenId,
+    }: {
+        publicKey: string;
+        tokenId?: string;
+    }): ReturnType<typeof fetchAccount> {
         const result = this._call("fetchAccount", {
             publicKey,
+            tokenId,
         });
         return result as ReturnType<typeof fetchAccount>;
+    }
+
+    async getTokenOwnership({
+        userAddress,
+        contractPublicKey,
+    }: {
+        userAddress: string;
+        contractPublicKey: string;
+    }) {
+        const result = await this._call("getTokenOwnership", {
+            userAddress,
+            contractPublicKey,
+        });
+        return result;
     }
 
     async getPrice({ contractPublicKey }: { contractPublicKey: string }): Promise<any> {
