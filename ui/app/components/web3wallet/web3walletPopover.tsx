@@ -19,7 +19,7 @@ export default function Web3walletPopover() {
                     {walletStore.userPublicKey}
                 </h4>
                 <p className=" w-full text-wrap px-4 pt-2 text-xs font-normal tracking-tight">
-                    Todo MINA
+                    {userStore.userMinaBalance} MINA
                 </p>
                 <p className=" w-full text-wrap px-4 pt-2 text-xs font-normal tracking-tight">
                     {userStore.library.length} Games

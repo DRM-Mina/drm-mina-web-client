@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useWorkerStore } from "./workerStore";
 
 interface UserState {
+    userMinaBalance: number;
     wishlist: number[];
     library: number[];
     gameId: number;
@@ -21,8 +22,6 @@ interface UserState {
 
 export const useUserStore = create<UserState, [["zustand/immer", never]]>(
     immer((set) => ({
-        isConnected: false,
-        walletInstalled: false,
         userMinaBalance: 0,
         wishlist: [],
         library: [],
@@ -71,6 +70,8 @@ export const useObserveUserLibrary = () => {
         (async () => {
             if (walletStore.userPublicKey && workerStore.isReady && !fetching) {
                 setFetching(true);
+                const minaBalance = await workerStore.getMinaBalance(walletStore.userPublicKey);
+                userStore.userMinaBalance = Number((minaBalance / 1000000000).toFixed(2));
                 const games = gameStore.games;
                 for (const game of games) {
                     const isOwned = await workerStore.getTokenOwnership(

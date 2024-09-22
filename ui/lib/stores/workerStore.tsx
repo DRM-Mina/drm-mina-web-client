@@ -13,6 +13,7 @@ interface WorkerStoreState {
 
     startWorker: () => Promise<void>;
     getPrice: (contractPublicKey: string) => Promise<void>;
+    getMinaBalance: (userAddress: string) => Promise<number>;
     getTokenOwnership: (userAddress: string, contractPublicKey: string) => Promise<boolean>;
     buyGame: (recipient: string, contractPublicKey: string) => Promise<any>;
     initAndAddDevice: (
@@ -97,6 +98,15 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
 
             const json = await this.worker.getPrice({ contractPublicKey });
             return json;
+        },
+
+        async getMinaBalance(userAddress: string) {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+
+            const balance = await this.worker.getMinaBalance({ userAddress });
+            return Number(balance);
         },
 
         async getTokenOwnership(userAddress: string, contractPublicKey: string) {

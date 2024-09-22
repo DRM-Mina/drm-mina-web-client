@@ -88,6 +88,19 @@ const functions = {
             tokenId: args.tokenId ? TokenId.fromBase58(args.tokenId) : undefined,
         });
     },
+
+    getMinaBalance: async ({ userAddress }: { userAddress: string }) => {
+        try {
+            const publicKey = PublicKey.fromBase58(userAddress);
+            await fetchAccount({
+                publicKey,
+            });
+            const balance = Mina.getBalance(publicKey);
+            return balance.toString();
+        } catch (e) {
+            return "0";
+        }
+    },
     getTokenOwnership: async ({
         userAddress,
         contractPublicKey,

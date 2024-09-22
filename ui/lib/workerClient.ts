@@ -35,6 +35,13 @@ export default class WorkerClient {
         return result as ReturnType<typeof fetchAccount>;
     }
 
+    async getMinaBalance({ userAddress }: { userAddress: string }) {
+        const result = await this._call("getMinaBalance", {
+            userAddress,
+        });
+        return result;
+    }
+
     async getTokenOwnership({
         userAddress,
         contractPublicKey,
