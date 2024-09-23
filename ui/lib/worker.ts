@@ -32,7 +32,10 @@ export type State = typeof state;
 
 const functions = {
     setActiveInstanceToDevnet: async (args: {}) => {
-        const Network = Mina.Network("https://api.minascan.io/node/devnet/v1/graphql");
+        const Network = Mina.Network({
+            mina: "https://api.minascan.io/node/devnet/v1/graphql",
+            archive: "https://api.minascan.io/archive/devnet/v1/graphql",
+        });
         console.log("Devnet network instance configured.");
         Mina.setActiveInstance(Network);
     },
@@ -63,23 +66,39 @@ const functions = {
         }
         return state.GameToken.instances[contractAddress];
     },
-    // getDRMInstance: async ({
-    //     contractAddress,
-    // }: {
-    //     contractAddress: string;
-    // }) => {
-    //     if (!state.DRM.contract) {
-    //         const contract = (await import(`drm-mina-contracts/build/src/DRM.js`))["DRM"];
-    //         if (!contract) {
-    //             throw new Error(`Could not load contract DRM from the module`);
-    //         }
-    //         state.DRM.contract = contract;
-    //     }
-    //     if (!state.DRM.instances[contractAddress]) {
-    //         const instance = new state.DRM.contract(PublicKey.fromBase58(contractAddress));
-    //         const offchainState = offchainState.setContractInstance(instance);
-    //         offchainState.compile();
-    // },
+    getDRMInstance: async ({ contractAddress }: { contractAddress: string }) => {
+        if (!state.DRM.contract) {
+            const contract = (await import(`drm-mina-contracts/build/src/DRM.js`))["DRM"];
+            if (!contract) {
+                throw new Error(`Could not load contract DRM from the module`);
+            }
+            state.DRM.contract = contract;
+        }
+
+        if (state.DRM.instances[contractAddress]) {
+            return state.DRM.instances[contractAddress];
+        }
+
+        const instance = new state.DRM.contract(PublicKey.fromBase58(contractAddress));
+
+        const offchainStateInstance = Object.create(offchainState);
+        offchainStateInstance.setContractInstance(instance);
+
+        console.time("Compile OffchainState");
+        await offchainStateInstance.compile();
+        console.timeEnd("Compile OffchainState");
+
+        console.time("Compile DRM");
+        await state.DRM.contract.compile();
+        console.timeEnd("Compile DRM");
+
+        state.DRM.instances[contractAddress] = {
+            instance,
+            offchainState: offchainStateInstance,
+        };
+
+        return state.DRM.instances[contractAddress];
+    },
 
     fetchAccount: async (args: { publicKey: string; tokenId?: string }) => {
         const publicKey = PublicKey.fromBase58(args.publicKey);
@@ -162,82 +181,175 @@ const functions = {
         await DeviceIdentifier.compile();
     },
 
-    // initAndAddDevice: async ({
-    //     userAddress,
-    //     rawIdentifiers,
-    //     deviceIndex,
-    //     contractPublicKey,
-    // }: {
-    //     userAddress: string;
-    //     rawIdentifiers: RawIdentifiers;
-    //     deviceIndex: number;
-    //     contractPublicKey: string;
-    // }) => {
-    //     if (!state.deviceIdentifierProgram) {
-    //         throw new Error("Program not compiled");
-    //     }
+    initAndAddDevice: async ({
+        userAddress,
+        rawIdentifiers,
+        deviceIndex,
+        contractPublicKey,
+    }: {
+        userAddress: string;
+        rawIdentifiers: RawIdentifiers;
+        deviceIndex: number;
+        contractPublicKey: string;
+    }) => {
+        if (!state.deviceIdentifierProgram) {
+            throw new Error("Program not compiled");
+        }
 
-    //     const contract = state.contracts["DRM"];
-    //     if (!contract) throw new Error("DRM contract is not loaded");
-    //     const contractInstance = new contract(PublicKey.fromBase58(contractPublicKey));
+        const { instance: contractInstance } = await functions.getDRMInstance({
+            contractAddress: contractPublicKey,
+        });
 
-    //     const identifiers = Identifiers.fromRaw(rawIdentifiers);
-    //     const proof: DeviceIdentifierProof = await state.deviceIdentifierProgram.proofForDevice(
-    //         identifiers
-    //     );
+        const gameTokenAddress = await contractInstance.gameTokenAddress.fetch();
 
-    //     const sender = PublicKey.fromBase58(userAddress);
-    //     const transaction = await Mina.transaction(
-    //         {
-    //             sender: sender,
-    //             fee: 1e8,
-    //         },
-    //         async () => {
-    //             await contractInstance.initAndAddDevice(sender, proof, UInt64.from(deviceIndex));
-    //         }
-    //     );
+        if (!gameTokenAddress) {
+            throw new Error("GameToken address not found");
+        }
 
-    //     await transaction.prove();
-    //     return transaction.toJSON();
-    // },
-    // changeDevice: async ({
-    //     userAddress,
-    //     rawIdentifiers,
-    //     deviceIndex,
-    //     contractPublicKey,
-    // }: {
-    //     userAddress: string;
-    //     rawIdentifiers: RawIdentifiers;
-    //     deviceIndex: number;
-    //     contractPublicKey: string;
-    // }) => {
-    //     if (!state.deviceIdentifierProgram) {
-    //         throw new Error("Program not compiled");
-    //     }
+        await fetchAccount({
+            publicKey: gameTokenAddress,
+        });
 
-    //     const contract = state.contracts["DRM"];
-    //     if (!contract) throw new Error("DRM contract is not loaded");
-    //     const contractInstance = new contract(PublicKey.fromBase58(contractPublicKey));
+        await fetchAccount({
+            publicKey: PublicKey.fromBase58(contractPublicKey),
+        });
 
-    //     const identifiers = Identifiers.fromRaw(rawIdentifiers);
-    //     const proof: DeviceIdentifierProof = await state.deviceIdentifierProgram.proofForDevice(
-    //         identifiers
-    //     );
+        const identifiers = Identifiers.fromRaw(rawIdentifiers);
+        const proof: DeviceIdentifierProof = await state.deviceIdentifierProgram.proofForDevice(
+            identifiers
+        );
 
-    //     const sender = PublicKey.fromBase58(userAddress);
-    //     const transaction = await Mina.transaction(
-    //         {
-    //             sender: sender,
-    //             fee: 1e8,
-    //         },
-    //         async () => {
-    //             await contractInstance.changeDevice(sender, proof, UInt64.from(deviceIndex));
-    //         }
-    //     );
+        const sender = PublicKey.fromBase58(userAddress);
+        const transaction = await Mina.transaction(
+            {
+                sender: sender,
+                fee: 1e8,
+            },
+            async () => {
+                await contractInstance.initAndAddDevice(sender, proof, UInt64.from(deviceIndex));
+            }
+        );
 
-    //     await transaction.prove();
-    //     return transaction.toJSON();
-    // },
+        await transaction.prove();
+        return transaction.toJSON();
+    },
+    changeDevice: async ({
+        userAddress,
+        rawIdentifiers,
+        deviceIndex,
+        contractPublicKey,
+    }: {
+        userAddress: string;
+        rawIdentifiers: RawIdentifiers;
+        deviceIndex: number;
+        contractPublicKey: string;
+    }) => {
+        if (!state.deviceIdentifierProgram) {
+            throw new Error("Program not compiled");
+        }
+
+        const { instance: contractInstance } = await functions.getDRMInstance({
+            contractAddress: contractPublicKey,
+        });
+
+        const gameTokenAddress = await contractInstance.gameTokenAddress.fetch();
+
+        if (!gameTokenAddress) {
+            throw new Error("GameToken address not found");
+        }
+
+        await fetchAccount({
+            publicKey: gameTokenAddress,
+        });
+
+        await fetchAccount({
+            publicKey: PublicKey.fromBase58(contractPublicKey),
+        });
+
+        const identifiers = Identifiers.fromRaw(rawIdentifiers);
+        const proof: DeviceIdentifierProof = await state.deviceIdentifierProgram.proofForDevice(
+            identifiers
+        );
+
+        const sender = PublicKey.fromBase58(userAddress);
+        const transaction = await Mina.transaction(
+            {
+                sender: sender,
+                fee: 1e8,
+            },
+            async () => {
+                await contractInstance.changeDevice(sender, proof, UInt64.from(deviceIndex));
+            }
+        );
+
+        await transaction.prove();
+        return transaction.toJSON();
+    },
+
+    settle: async ({
+        contractAddress,
+        userAddress,
+    }: {
+        contractAddress: string;
+        userAddress: string;
+    }) => {
+        const { instance: contractInstance, offchainState: drmState } =
+            await functions.getDRMInstance({
+                contractAddress,
+            });
+
+        await fetchAccount({
+            publicKey: PublicKey.fromBase58(userAddress),
+        });
+
+        await fetchAccount({
+            publicKey: PublicKey.fromBase58(contractAddress),
+        });
+
+        let proof = await drmState.createSettlementProof();
+
+        const transaction = await Mina.transaction(
+            {
+                sender: PublicKey.fromBase58(userAddress),
+                fee: 1e9,
+            },
+            async () => {
+                await contractInstance.settle(proof);
+            }
+        );
+
+        await transaction.prove();
+        return transaction.toJSON();
+    },
+
+    getDevices: async ({
+        userAddress,
+        contractAddress,
+    }: {
+        userAddress: string;
+        contractAddress: string;
+    }) => {
+        const { offchainState: drmState } = await functions.getDRMInstance({
+            contractAddress: contractAddress,
+        });
+
+        await fetchAccount({
+            publicKey: PublicKey.fromBase58(userAddress),
+        });
+
+        await fetchAccount({
+            publicKey: PublicKey.fromBase58(contractAddress),
+        });
+
+        const devices = await drmState.fields.devices.get(PublicKey.fromBase58(userAddress));
+
+        return [
+            devices.value.device_1.toString(),
+            devices.value.device_2.toString(),
+            devices.value.device_3.toString(),
+            devices.value.device_4.toString(),
+        ];
+    },
 };
 export type WorkerFunctions = keyof typeof functions;
 

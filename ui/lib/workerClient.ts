@@ -77,45 +77,73 @@ export default class WorkerClient {
         return result;
     }
 
-    // async initAndAddDevice({
-    //     userAddress,
-    //     rawIdentifiers,
-    //     deviceIndex,
-    //     contractPublicKey,
-    // }: {
-    //     userAddress: string;
-    //     rawIdentifiers: RawIdentifiers;
-    //     deviceIndex: number;
-    //     contractPublicKey: string;
-    // }) {
-    //     const result = await this._call("initAndAddDevice", {
-    //         userAddress,
-    //         rawIdentifiers,
-    //         deviceIndex,
-    //         contractPublicKey,
-    //     });
-    //     return result;
-    // }
+    async initAndAddDevice({
+        userAddress,
+        rawIdentifiers,
+        deviceIndex,
+        contractPublicKey,
+    }: {
+        userAddress: string;
+        rawIdentifiers: RawIdentifiers;
+        deviceIndex: number;
+        contractPublicKey: string;
+    }) {
+        const result = await this._call("initAndAddDevice", {
+            userAddress,
+            rawIdentifiers,
+            deviceIndex,
+            contractPublicKey,
+        });
+        return result;
+    }
 
-    // async changeDevice({
-    //     userAddress,
-    //     rawIdentifiers,
-    //     deviceIndex,
-    //     contractPublicKey,
-    // }: {
-    //     userAddress: string;
-    //     rawIdentifiers: RawIdentifiers;
-    //     deviceIndex: number;
-    //     contractPublicKey: string;
-    // }) {
-    //     const result = await this._call("changeDevice", {
-    //         userAddress,
-    //         rawIdentifiers,
-    //         deviceIndex,
-    //         contractPublicKey,
-    //     });
-    //     return result;
-    // }
+    async changeDevice({
+        userAddress,
+        rawIdentifiers,
+        deviceIndex,
+        contractPublicKey,
+    }: {
+        userAddress: string;
+        rawIdentifiers: RawIdentifiers;
+        deviceIndex: number;
+        contractPublicKey: string;
+    }) {
+        const result = await this._call("changeDevice", {
+            userAddress,
+            rawIdentifiers,
+            deviceIndex,
+            contractPublicKey,
+        });
+        return result;
+    }
+
+    async settle({
+        contractAddress,
+        userAddress,
+    }: {
+        contractAddress: string;
+        userAddress: string;
+    }) {
+        const result = await this._call("settle", {
+            contractAddress,
+            userAddress,
+        });
+        return result;
+    }
+
+    async getDevices({
+        userAddress,
+        contractAddress,
+    }: {
+        userAddress: string;
+        contractAddress: string;
+    }) {
+        const result = await this._call("getDevices", {
+            userAddress,
+            contractAddress,
+        });
+        return result;
+    }
 
     worker: Worker;
 
