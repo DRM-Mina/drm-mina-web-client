@@ -23,7 +23,7 @@ const GiftGame = dynamic(() => import("../components/giftGame"), {
     loading: () => <Gift className=" p-4" />,
 });
 
-// const AssignDevice = dynamic(() => import("./assignDevice"));
+const AssignDevice = dynamic(() => import("./assignDevice"));
 
 export default function GameDetail() {
     const gameName = useSearchParams().get("game");
@@ -297,7 +297,7 @@ export default function GameDetail() {
                     </div>
                 </div>
                 <div className=" col-span-1"></div>
-                {/* <AssignDevice gameId={game?.gameId!} /> */}
+                <AssignDevice game={game!} />
             </div>
             {/* <CommentSection /> */}
         </div>

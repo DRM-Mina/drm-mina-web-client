@@ -24,6 +24,7 @@ export default function Home() {
         if (device || gameName) {
             if (device) {
                 deviceStore.setDevice(JSON.parse(device));
+                console.log("device", device);
             }
             if (gameName) router.push("/game-detail?game=" + gameName);
         }

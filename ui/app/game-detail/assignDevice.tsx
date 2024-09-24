@@ -10,10 +10,10 @@ import { useWorkerStore } from "@/lib/stores/workerStore";
 import React, { useEffect, useState } from "react";
 
 interface AssignDeviceProps {
-    gameId: number;
+    game: Game;
 }
 
-export default function AssignDevice({ gameId }: AssignDeviceProps) {
+export default function AssignDevice({ game }: AssignDeviceProps) {
     const userStore = useUserStore();
     const walletStore = useWalletStore();
     const deviceStore = useDeviceStore();
@@ -21,6 +21,7 @@ export default function AssignDevice({ gameId }: AssignDeviceProps) {
     const [slotNames, setSlotNames] = useState<string[]>([]);
     const [canAssign, setCanAssign] = useState<boolean>(false);
     const [isAssigning, setIsAssigning] = useState<boolean>(false);
+    const [fetchingDevices, setFetchingDevices] = useState<boolean>(false);
 
     const { toast } = useToast();
 
@@ -29,23 +30,59 @@ export default function AssignDevice({ gameId }: AssignDeviceProps) {
     }, [userStore.slotNames, walletStore.userPublicKey]);
 
     useEffect(() => {
+        console.log(
+            workerStore.isReady,
+            workerStore.gameTokenCompiled,
+            walletStore.isConnected,
+            userStore.library.includes(game.gameId),
+            // userStore.gameId === game.gameId,
+            !fetchingDevices
+        );
         if (
             // TODO: enable in prod
             // deviceStore.isDeviceSet &&
             workerStore.isReady &&
-            workerStore.contractsCompiled &&
+            workerStore.gameTokenCompiled &&
             walletStore.isConnected &&
-            userStore.library.includes(gameId) &&
-            userStore.gameId === gameId
+            userStore.library.includes(game.gameId) &&
+            // userStore.gameId === game.gameId &&
+            !fetchingDevices
         ) {
-            setCanAssign(true);
+            (async () => {
+                setFetchingDevices(true);
+                const slotCount = await workerStore.getMaxDeviceAllowed(
+                    game.gameTokenContractAddress
+                );
+                console.log("slotCount", slotCount);
+                const devices = await workerStore.getDevices(
+                    walletStore.userPublicKey!,
+                    game.DRMContractAddress
+                );
+                console.log(devices);
+                let slotArray: string[] = [];
+                if (devices) {
+                    for (let i = 1; i <= slotCount; i++) {
+                        slotArray.push(
+                            devices[i] === "0" ? "Empty" : devices[i].slice(0, 6) + "..."
+                        );
+                    }
+                } else {
+                    for (let i = 0; i < slotCount; i++) {
+                        slotArray.push("Empty");
+                    }
+                }
+                setFetchingDevices(false);
+                if (devices) {
+                    setCanAssign(true);
+                }
+            })();
         }
     }, [
         walletStore.isConnected,
         userStore.library,
         userStore.gameId,
         workerStore.isReady,
-        workerStore.contractsCompiled,
+        workerStore.gameTokenCompiled,
     ]);
 
     return (
@@ -73,7 +110,7 @@ export default function AssignDevice({ gameId }: AssignDeviceProps) {
                                             (async () => {
                                                 const res = await postSlotNames(
                                                     walletStore.userPublicKey!,
-                                                    gameId,
+                                                    game.gameId,
                                                     slotNames
                                                 );
                                                 if (res) {
