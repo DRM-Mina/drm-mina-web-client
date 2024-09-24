@@ -7,19 +7,46 @@ import { Toaster } from "@/components/ui/toaster";
 import { Sidebar } from "./components/sidebar";
 import SearchBar from "./components/searchbar";
 import Footer from "./components/footer";
+import { useWorkerStore } from "@/lib/stores/workerStore";
+import { useWalletStore } from "@/lib/stores/walletStore";
+import { useObserveGames } from "@/lib/stores/gameStore";
+import useHasMounted from "@/lib/customHooks";
+import { useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { useObserveUserLibrary } from "@/lib/stores/userStore";
 
 const inter = Inter({ subsets: ["latin"] });
-
-// export const metadata: Metadata = {
-//     title: "DRM Mina",
-//     description: "Game Marketplace of Mina",
-// };
 
 export default function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const workerStore = useWorkerStore();
+    const walletStore = useWalletStore();
+    useObserveGames();
+    walletStore.observeWalletChange();
+    const { toast } = useToast();
+    const hasMounted = useHasMounted();
+    useEffect(() => {
+        (async () => {
+            if (workerStore.isLoading || workerStore.isReady) {
+                return;
+            }
+            toast({
+                title: "Web workers compiling contracts",
+                description: "Web workers are compiling contracts, please wait",
+            });
+            await workerStore.startWorker();
+            toast({
+                title: "Web workers ready",
+                description: "Web workers are ready",
+            });
+        })();
+    }, [hasMounted]);
+
+    useObserveUserLibrary();
+
     return (
         <html lang="en">
             <head>

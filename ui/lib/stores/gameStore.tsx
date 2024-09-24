@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 import { fetchGameData } from "../api";
+import useHasMounted from "../customHooks";
 
 interface GameStoreState {
     games: Game[];
@@ -21,8 +22,10 @@ export const useGamesStore = create<GameStoreState>()((set) => ({
 export const useObserveGames = () => {
     const gameStore = useGamesStore();
 
+    const hasMounted = useHasMounted();
     useEffect(() => {
         (async () => {
+            console.log("fetching games");
             const games: Game[] = await fetchGameData();
             let gameList: Game[] = [];
             let discountGames: Game[] = [];
@@ -37,5 +40,5 @@ export const useObserveGames = () => {
             gameStore.setGames(games);
             gameStore.setDiscountGames(discountGames);
         })();
-    }, []);
+    }, [hasMounted]);
 };
