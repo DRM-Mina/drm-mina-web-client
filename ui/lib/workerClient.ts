@@ -118,15 +118,22 @@ export default class WorkerClient {
     }
 
     async settle({
-        contractAddress,
         userAddress,
+        contractAddress,
     }: {
-        contractAddress: string;
         userAddress: string;
+        contractAddress: string;
     }) {
         const result = await this._call("settle", {
             contractAddress,
             userAddress,
+        });
+        return result;
+    }
+
+    async getMaxDeviceAllowed({ contractAddress }: { contractAddress: string }) {
+        const result = await this._call("getMaxDeviceAllowed", {
+            contractAddress,
         });
         return result;
     }
@@ -138,6 +145,7 @@ export default class WorkerClient {
         userAddress: string;
         contractAddress: string;
     }) {
+        console.log("worker call getDevices");
         const result = await this._call("getDevices", {
             userAddress,
             contractAddress,

@@ -28,6 +28,9 @@ interface WorkerStoreState {
         deviceIndex: number,
         contractPublicKey: string
     ) => Promise<any>;
+    settle: (userAddress: string, contractAddress: string) => Promise<any>;
+    getMaxDeviceAllowed: (contractAddress: string) => Promise<number>;
+    getDevices: (userAddress: string, contractAddress: string) => Promise<any>;
 }
 
 async function timeout(seconds: number): Promise<void> {
@@ -77,9 +80,6 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
                 state.isReady = true;
             });
             console.timeEnd("Worker started");
-            // console.time("DeviceIdentifierProgram compiled");
-            // await worker.compileProgram();
-            // console.timeEnd("DeviceIdentifierProgram compiled");
 
             console.time("GameToken contract compiled");
             await worker.loadAndCompileGameTokenContract();
@@ -138,13 +138,13 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
                 throw new Error("Worker not ready");
             }
 
-            // const json = await this.worker.initAndAddDevice({
-            //     userAddress,
-            //     rawIdentifiers,
-            //     deviceIndex,
-            //     contractPublicKey,
-            // });
-            // return json;
+            const json = await this.worker.initAndAddDevice({
+                userAddress,
+                rawIdentifiers,
+                deviceIndex,
+                contractPublicKey,
+            });
+            return json;
         },
 
         async changeDevice(
@@ -157,13 +157,40 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
                 throw new Error("Worker not ready");
             }
 
-            // const json = await this.worker.changeDevice({
-            //     userAddress,
-            //     rawIdentifiers,
-            //     deviceIndex,
-            //     contractPublicKey,
-            // });
-            // return json;
+            const json = await this.worker.changeDevice({
+                userAddress,
+                rawIdentifiers,
+                deviceIndex,
+                contractPublicKey,
+            });
+            return json;
+        },
+
+        async settle(userAddress: string, contractAddress: string) {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+
+            const json = await this.worker.settle({ userAddress, contractAddress });
+            return json;
+        },
+
+        async getMaxDeviceAllowed(contractAddress: string) {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+
+            const max = await this.worker.getMaxDeviceAllowed({ contractAddress });
+            return Number(max);
+        },
+
+        async getDevices(userAddress: string, contractAddress: string) {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+
+            const arr = await this.worker.getDevices({ userAddress, contractAddress });
+            return arr;
         },
     }))
 );

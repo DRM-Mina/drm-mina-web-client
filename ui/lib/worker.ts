@@ -76,14 +76,17 @@ const functions = {
         }
 
         if (state.DRM.instances[contractAddress]) {
+            console.log("Returning cached DRM instance");
             return state.DRM.instances[contractAddress];
         }
 
         const instance = new state.DRM.contract(PublicKey.fromBase58(contractAddress));
 
         const offchainStateInstance = Object.create(offchainState);
+
         offchainStateInstance.setContractInstance(instance);
 
+        console.log("Compiling offchain state");
         console.time("Compile OffchainState");
         await offchainStateInstance.compile();
         console.timeEnd("Compile OffchainState");
@@ -322,6 +325,14 @@ const functions = {
         return transaction.toJSON();
     },
 
+    getMaxDeviceAllowed: async ({ contractAddress }: { contractAddress: string }) => {
+        const gameTokenInstance = await functions.getGameTokenInstance({
+            contractAddress,
+        });
+        const maxDeviceAllowed = await gameTokenInstance.maxDeviceAllowed.fetch();
+        return maxDeviceAllowed ? maxDeviceAllowed.toString() : "0";
+    },
+
     getDevices: async ({
         userAddress,
         contractAddress,
@@ -329,9 +340,12 @@ const functions = {
         userAddress: string;
         contractAddress: string;
     }) => {
+        console.log("Getting devices for", userAddress, contractAddress);
+        console.time("Get DRM Instance");
         const { offchainState: drmState } = await functions.getDRMInstance({
             contractAddress: contractAddress,
         });
+        console.timeEnd("Get DRM Instance");
 
         await fetchAccount({
             publicKey: PublicKey.fromBase58(userAddress),
