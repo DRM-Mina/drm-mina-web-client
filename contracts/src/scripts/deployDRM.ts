@@ -23,7 +23,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const Network = Mina.Network('https://api.minascan.io/node/devnet/v1/graphql');
+const Network = Mina.Network({
+  mina: 'https://api.minascan.io/node/devnet/v1/graphql',
+  archive: 'https://api.minascan.io/archive/devnet/v1/graphql',
+});
 Mina.setActiveInstance(Network);
 
 // @ts-ignore
