@@ -37,17 +37,27 @@ export class Devices extends Struct({
   }
 }
 
-export const offchainState = OffchainState({
-  devices: OffchainState.Map(PublicKey, Devices),
-  sessions: OffchainState.Map(Field, UInt64),
-});
+export const offchainState = OffchainState(
+  {
+    devices: OffchainState.Map(PublicKey, Devices),
+    sessions: OffchainState.Map(Field, UInt64),
+  },
+  {
+    logTotalCapacity: 20,
+    maxActionsPerProof: 5,
+  }
+);
 
-class StateProof extends offchainState.Proof {}
+export class StateProof extends offchainState.Proof {}
 
 export class DRM extends SmartContract {
   @state(PublicKey) gameTokenAddress = State<PublicKey>();
 
   @state(OffchainState.Commitments) offchainState = offchainState.commitments();
+
+  readonly events = {
+    Session: SessionEvent,
+  };
 
   async deploy() {
     await super.deploy();
@@ -256,6 +266,8 @@ export class DRM extends SmartContract {
     const currentSessionKey = deviceSessionProof.publicInput.currentSessionKey;
     const newSessionKey = deviceSessionProof.publicOutput.newSessionKey;
 
+    currentSessionKey.equals(newSessionKey).assertFalse();
+
     const fetchedSession = await offchainState.fields.sessions.get(deviceHash);
     fetchedSession.assertSome('Device session not found');
 
@@ -273,5 +285,20 @@ export class DRM extends SmartContract {
       from: currentSessionKey,
       to: newSessionKey,
     });
+
+    this.emitEvent(
+      'Session',
+      new SessionEvent({
+        device: deviceHash,
+        prev: currentSessionKey,
+        current: newSessionKey,
+      })
+    );
   }
 }
+
+export class SessionEvent extends Struct({
+  device: Field,
+  prev: UInt64,
+  current: UInt64,
+}) {}
