@@ -19,9 +19,9 @@ const BuyGame = dynamic(() => import("../components/buyGame"), {
     loading: () => <Button>Loading...</Button>,
 });
 
-const GiftGame = dynamic(() => import("../components/giftGame"), {
-    loading: () => <Gift className=" p-4" />,
-});
+// const GiftGame = dynamic(() => import("../components/giftGame"), {
+//     loading: () => <Gift className=" p-4" />,
+// });
 
 const AssignDevice = dynamic(() => import("./assignDevice"));
 
@@ -222,7 +222,7 @@ export default function GameDetail() {
                                     />
                                 </div>
                                 <BuyGame game={game} />
-                                <GiftGame gameId={game?.gameId} />
+                                {/* <GiftGame gameId={game?.gameId} /> */}
                             </div>
                             <Popover>
                                 <PopoverTrigger>
