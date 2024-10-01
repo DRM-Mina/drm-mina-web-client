@@ -2,7 +2,7 @@ import { PrivateKey, Mina, UInt64, Bool, AccountUpdate } from 'o1js';
 import { GameToken } from '../GameToken.js';
 import { DRM, offchainState } from '../DRM.js';
 import { DeviceIdentifier } from '../lib/DeviceIdentifierProof.js';
-import { DeviceSession } from '../lib/SessionProof.js';
+import { DeviceSession } from '../lib/DeviceSessionProof.js';
 import { mockIdentifiers } from './mock.js';
 import { Identifiers } from '../lib/DeviceIdentifier.js';
 

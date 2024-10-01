@@ -18,7 +18,7 @@ import { DRM, offchainState } from '../DRM.js';
 import { GameToken } from '../GameToken.js';
 import { mockIdentifiers } from './mock.js';
 import { DeviceIdentifier, Identifiers } from '../lib/index.js';
-import { DeviceSession } from '../lib/SessionProof.js';
+import { DeviceSession } from '../lib/DeviceSessionProof.js';
 
 const proofsEnabled = true;
 
@@ -53,18 +53,30 @@ const DRMInstance2 = new DRM(DRMAddr2);
 offchainState.setContractInstance(DRMInstance);
 
 console.time('Compile DeviceIdentifier ');
+const DeviceIdentifierCache: Cache = Cache.FileSystem(
+  './cache/deviceIdentifierCache'
+);
+// await DeviceIdentifier.compile({ cache: DeviceIdentifierCache });
 await DeviceIdentifier.compile();
 console.timeEnd('Compile DeviceIdentifier ');
 console.time('Compile DeviceSession ');
+const DeviceSessionCache: Cache = Cache.FileSystem(
+  './cache/deviceSessionCache'
+);
+// await DeviceSession.compile({ cache: DeviceSessionCache });
 await DeviceSession.compile();
 console.timeEnd('Compile DeviceSession ');
 console.time('Compile GameToken ');
+const GameTokenCache: Cache = Cache.FileSystem('./cache/gameTokenCache');
+// await GameToken.compile({ cache: GameTokenCache });
 await GameToken.compile();
 console.timeEnd('Compile GameToken ');
 console.time('Compile offchainState ');
 await offchainState.compile();
 console.timeEnd('Compile offchainState ');
 console.time('Compile DRM ');
+const DRMCache: Cache = Cache.FileSystem('./cache/drmCache');
+// await DRM.compile({ cache: DRMCache });
 await DRM.compile();
 console.timeEnd('Compile DRM ');
 

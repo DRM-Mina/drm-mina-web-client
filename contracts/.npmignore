@@ -17,5 +17,6 @@ keys
 mock.ts
 
 src/temp/
+src/scripts/
 control.ts
 cache

@@ -1,14 +1,14 @@
-import { Field, Struct, UInt64, ZkProgram } from 'o1js';
+import { Field, PublicKey, Struct, UInt64, ZkProgram } from 'o1js';
 import { Identifiers } from './DeviceIdentifier.js';
 
 export class DeviceSessionInput extends Struct({
-  gameId: UInt64,
+  gameToken: PublicKey,
   currentSessionKey: UInt64,
   newSessionKey: UInt64,
 }) {}
 
 export class DeviceSessionOutput extends Struct({
-  gameId: UInt64,
+  gameToken: PublicKey,
   newSessionKey: UInt64,
   hash: Field,
 }) {}
@@ -23,10 +23,10 @@ export const DeviceSession = ZkProgram({
       async method(publicInput: DeviceSessionInput, identifiers: Identifiers) {
         const identifiersHash = identifiers.hash();
         const newSessionKey = publicInput.newSessionKey;
-        const gameId = publicInput.gameId;
+        const gameToken = publicInput.gameToken;
 
         return {
-          gameId: gameId,
+          gameToken: gameToken,
           newSessionKey: newSessionKey,
           hash: identifiersHash,
         };

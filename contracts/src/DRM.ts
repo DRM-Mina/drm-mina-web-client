@@ -16,7 +16,7 @@ import {
   Provable,
 } from 'o1js';
 import { DeviceIdentifierProof } from './lib/DeviceIdentifierProof.js';
-import { DeviceSessionProof } from './lib/SessionProof.js';
+import { DeviceSessionProof } from './lib/DeviceSessionProof.js';
 import { GameToken } from './GameToken.js';
 
 const { OffchainState, OffchainStateCommitments } = Experimental;
@@ -260,6 +260,9 @@ export class DRM extends SmartContract {
   @method
   async createSession(deviceSessionProof: DeviceSessionProof) {
     deviceSessionProof.verify();
+
+    const gameTokenAddress = this.gameTokenAddress.getAndRequireEquals();
+    deviceSessionProof.publicOutput.gameToken.assertEquals(gameTokenAddress);
 
     const deviceHash = deviceSessionProof.publicOutput.hash;
 
