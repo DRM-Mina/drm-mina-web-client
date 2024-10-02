@@ -19,6 +19,9 @@ describe('GameToken Contract Tests', () => {
   const AliceDeviceRaw2 = mockIdentifiers[1];
   const AliceDeviceIdentifiers2 = Identifiers.fromRaw(AliceDeviceRaw2);
 
+  const AliceDeviceRaw3 = mockIdentifiers[2];
+  const AliceDeviceIdentifiers3 = Identifiers.fromRaw(AliceDeviceRaw3);
+
   const BobDeviceRaw = mockIdentifiers[2];
   const BobDeviceIdentifiers = Identifiers.fromRaw(BobDeviceRaw);
 
@@ -150,6 +153,18 @@ describe('GameToken Contract Tests', () => {
       AliceDeviceIdentifiers
     );
 
+    let aliceDeviceSession = await offchainState.fields.sessions.get(
+      AliceDeviceIdentifiers.hash()
+    );
+
+    console.log(
+      'session ',
+      aliceDeviceSession.isSome,
+      aliceDeviceSession.value.toString()
+    );
+
+    expect(aliceDeviceSession.isSome.toBoolean()).toBeFalsy();
+
     console.timeEnd('Device identifier proof create');
     console.time('Alice registers a device');
     const registerDeviceTx = await Mina.transaction(
@@ -187,6 +202,13 @@ describe('GameToken Contract Tests', () => {
     expect(
       aliceDevices.value.device_1.equals(AliceDeviceIdentifiers.hash())
     ).toBeTruthy();
+
+    aliceDeviceSession = await offchainState.fields.sessions.get(
+      AliceDeviceIdentifiers.hash()
+    );
+
+    expect(aliceDeviceSession.isSome).toBeTruthy();
+    expect(aliceDeviceSession.value.equals(UInt64.from(1))).toBeTruthy();
   });
 
   test('Alice registers another device', async () => {
@@ -422,6 +444,140 @@ describe('GameToken Contract Tests', () => {
       throw new Error(
         'Bob should not be able to register a device without buying a game'
       );
+    } catch (error) {
+      console.log('Error expected');
+    }
+  });
+
+  test('Alice creates a session', async () => {
+    console.time('Alice creates a session');
+
+    let aliceDeviceSession = await offchainState.fields.sessions.get(
+      AliceDeviceIdentifiers.hash()
+    );
+
+    expect(aliceDeviceSession.value.equals(UInt64.from(1))).toBeTruthy();
+
+    const deviceSessionProof = await DeviceSession.proofForSession(
+      {
+        gameToken: GameTokenAddr,
+        currentSessionKey: UInt64.from(1),
+        newSessionKey: UInt64.from(20),
+      },
+      AliceDeviceIdentifiers
+    );
+
+    const aliceTx = await Mina.transaction(
+      {
+        sender: alice,
+        fee: 1e8,
+      },
+      async () => {
+        await DRMInstance.createSession(deviceSessionProof);
+      }
+    );
+
+    aliceTx.sign([alice.key, DRMPk]);
+
+    await aliceTx.prove();
+    await aliceTx.send();
+    console.timeEnd('Alice creates a session');
+
+    aliceDeviceSession = await offchainState.fields.sessions.get(
+      AliceDeviceIdentifiers.hash()
+    );
+
+    expect(aliceDeviceSession.value.equals(UInt64.from(20))).toBeTruthy();
+  });
+
+  test('Alice register device 3 in slot 1', async () => {
+    console.time('Device identifier proof create');
+    const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+      AliceDeviceIdentifiers3
+    );
+
+    console.timeEnd('Device identifier proof create');
+
+    console.time('Alice registers a device');
+    const registerDeviceTx = await Mina.transaction(
+      {
+        sender: alice,
+        fee: 1e8,
+      },
+      async () => {
+        await DRMInstance.changeDevice(alice, deviceIdentifier, UInt64.from(1));
+      }
+    );
+
+    registerDeviceTx.sign([alice.key, DRMPk]);
+
+    await registerDeviceTx.prove();
+    await registerDeviceTx.send();
+    console.timeEnd('Alice registers a device');
+
+    console.time('Settling');
+
+    let proof = await offchainState.createSettlementProof();
+    const txnProof = await Mina.transaction(alice, async () => {
+      await DRMInstance.settle(proof);
+    });
+    await txnProof.prove();
+    await txnProof.sign([alice.key]).send();
+
+    console.timeEnd('Settling');
+
+    const aliceDevices = await offchainState.fields.devices.get(alice);
+    expect(
+      aliceDevices.value.device_1.equals(AliceDeviceIdentifiers3.hash())
+    ).toBeTruthy();
+
+    const aliceDeviceSession = await offchainState.fields.sessions.get(
+      AliceDeviceIdentifiers.hash()
+    );
+
+    const aliceDeviceSession3 = await offchainState.fields.sessions.get(
+      AliceDeviceIdentifiers3.hash()
+    );
+
+    expect(aliceDeviceSession.value.equals(UInt64.from(0))).toBeTruthy();
+    expect(aliceDeviceSession3.value.equals(UInt64.from(1))).toBeTruthy();
+  });
+
+  test('Alice tries to create a session with deleted device', async () => {
+    try {
+      console.time('Alice creates a session');
+
+      let aliceDeviceSession = await offchainState.fields.sessions.get(
+        AliceDeviceIdentifiers.hash()
+      );
+
+      expect(aliceDeviceSession.value.equals(UInt64.from(0))).toBeTruthy();
+
+      const deviceSessionProof = await DeviceSession.proofForSession(
+        {
+          gameToken: GameTokenAddr,
+          currentSessionKey: UInt64.from(0),
+          newSessionKey: UInt64.from(20),
+        },
+        AliceDeviceIdentifiers
+      );
+
+      const aliceTx = await Mina.transaction(
+        {
+          sender: alice,
+          fee: 1e8,
+        },
+        async () => {
+          await DRMInstance.createSession(deviceSessionProof);
+        }
+      );
+
+      aliceTx.sign([alice.key, DRMPk]);
+
+      await aliceTx.prove();
+      await aliceTx.send();
+      console.timeEnd('Alice creates a session');
+      throw new Error('Alice should not be able to create a session');
     } catch (error) {
       console.log('Error expected');
     }

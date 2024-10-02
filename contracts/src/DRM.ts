@@ -153,6 +153,11 @@ export class DRM extends SmartContract {
       from: undefined,
       to: newDevices,
     });
+
+    offchainState.fields.sessions.update(deviceIdentifierHash, {
+      from: undefined,
+      to: UInt64.from(1),
+    });
   }
 
   @method
