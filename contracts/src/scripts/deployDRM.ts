@@ -18,7 +18,7 @@ import {
 import { DRM, offchainState } from '../DRM.js';
 import { GameToken } from '../GameToken.js';
 import { DeviceIdentifier, Identifiers } from '../lib/index.js';
-import { DeviceSession } from '../lib/SessionProof.js';
+import { DeviceSession } from '../lib/DeviceSessionProof.js';
 import dotenv from 'dotenv';
 
 dotenv.config();

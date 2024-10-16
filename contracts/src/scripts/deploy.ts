@@ -7,10 +7,8 @@ dotenv.config();
 const Network = Mina.Network('https://api.minascan.io/node/devnet/v1/graphql');
 Mina.setActiveInstance(Network);
 
-const transactionFee = 100_000_000;
-const proofsEnabled = false;
-const GAMEPRICE = 15_000_000_000;
-const DISCOUNT = 5_000_000_000;
+const GAMEPRICE = [10_000_000_000, 20_000_000_000, 15_000_000_000];
+const DISCOUNT = [2_000_000_000, 10_000_000_000, 5_000_000_000];
 const TIMEOUTINTERVAL = 10000;
 const MAXDEVICEALLOWED = 4;
 
@@ -40,8 +38,8 @@ const deployTx = await Mina.transaction(
     });
     await GameTokenInstance.initialize(
       publisher,
-      UInt64.from(GAMEPRICE),
-      UInt64.from(DISCOUNT),
+      UInt64.from(GAMEPRICE[0]),
+      UInt64.from(DISCOUNT[0]),
       UInt64.from(TIMEOUTINTERVAL),
       UInt64.from(MAXDEVICEALLOWED),
       Bool(false)
