@@ -1,6 +1,6 @@
 {
   "name": "drm-mina-contracts",
-  "version": "0.3.5",
+  "version": "0.3.7",
   "description": "",
   "author": "",
   "license": "Apache-2.0",
@@ -36,7 +36,7 @@
     "typescript": "^5.1"
   },
   "peerDependencies": {
-    "o1js": "^1.*"
+    "o1js": "^1.9"
   },
   "engines": {
     "node": ">=18.14.0"
