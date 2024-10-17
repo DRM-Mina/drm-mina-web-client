@@ -2,22 +2,15 @@ import {
   PrivateKey,
   PublicKey,
   Mina,
-  VerificationKey,
   UInt64,
-  UInt32,
-  Cache,
   AccountUpdate,
-  Field,
-  Encoding,
-  Signature,
-  fetchLastBlock,
   Bool,
-  Poseidon,
   fetchAccount,
+  Account,
 } from 'o1js';
 import { DRM, offchainState } from '../DRM.js';
 import { GameToken } from '../GameToken.js';
-import { DeviceIdentifier, Identifiers } from '../lib/index.js';
+import { DeviceIdentifier } from '../lib/index.js';
 import { DeviceSession } from '../lib/DeviceSessionProof.js';
 import dotenv from 'dotenv';
 
@@ -32,52 +25,36 @@ Mina.setActiveInstance(Network);
 // @ts-ignore
 const publisherPrivateKey = PrivateKey.fromBase58(process.env.PUBLISHER_KEY);
 const publisherPubKey = publisherPrivateKey.toPublicKey();
+const { account } = await fetchAccount({
+  publicKey: publisherPubKey,
+});
+
+let nonce = Number(account!.nonce.toBigint());
+
 console.log(publisherPubKey.toBase58());
-// await fetchAccount({
-//   publicKey: publisherPubKey,
-// });
 
 const GAMEPRICE = [10_000_000_000, 20_000_000_000, 15_000_000_000];
 const DISCOUNT = [2_000_000_000, 10_000_000_000, 5_000_000_000];
 const TIMEOUTINTERVAL = 10000;
 const MAXDEVICEALLOWED = 4;
 
-const drmInstances = new Map();
-
-async function getDRMInstance(contractAddress: string) {
-  if (drmInstances.has(contractAddress)) {
-    return drmInstances.get(contractAddress);
-  }
-
-  const instance = new DRM(PublicKey.fromBase58(contractAddress));
-
-  const offchainStateInstance = Object.create(offchainState);
-  offchainStateInstance.setContractInstance(instance);
-
-  console.time('Compile OffchainState');
-  await offchainStateInstance.compile();
-  console.timeEnd('Compile OffchainState');
-  console.time('Compile DRM');
-  await DRM.compile();
-  console.timeEnd('Compile DRM');
-
-  drmInstances.set(contractAddress, {
-    instance,
-    offchainState: offchainStateInstance,
-  });
-
-  return { instance, offchainState: offchainStateInstance };
-}
-
-console.time('Compile DeviceIdentifier ');
+console.time('Compile DeviceIdentifier');
 await DeviceIdentifier.compile();
-console.timeEnd('Compile DeviceIdentifier ');
-console.time('Compile DeviceSession ');
+console.timeEnd('Compile DeviceIdentifier');
+console.time('Compile DeviceSession');
 await DeviceSession.compile();
-console.timeEnd('Compile DeviceSession ');
-console.time('Compile GameToken ');
+console.timeEnd('Compile DeviceSession');
+console.time('Compile GameToken');
 await GameToken.compile();
-console.timeEnd('Compile GameToken ');
+console.timeEnd('Compile GameToken');
+console.time('Compile offchainState');
+await offchainState.compile();
+console.timeEnd('Compile offchainState');
+console.time('Compile DRM');
+await DRM.compile();
+console.timeEnd('Compile DRM');
+
+const pendingTransactions = [];
 
 for (let i = 0; i < 3; i++) {
   const GameTokenPk = PrivateKey.random();
@@ -86,12 +63,15 @@ for (let i = 0; i < 3; i++) {
 
   const DRMPk = PrivateKey.random();
   const DRMAddr = DRMPk.toPublicKey();
-  const { instance: DRMInstance } = await getDRMInstance(DRMAddr.toBase58());
+  const DRMInstance = new DRM(DRMAddr);
+  DRMInstance.offchainState.setContractInstance(DRMInstance);
+
   console.time(`Deploying ${i}`);
   const deployTx = await Mina.transaction(
     {
       sender: publisherPubKey,
       fee: 1e8,
+      nonce: nonce++,
     },
     async () => {
       AccountUpdate.fundNewAccount(publisherPubKey, 3);
@@ -114,6 +94,7 @@ for (let i = 0; i < 3; i++) {
   deployTx.sign([publisherPrivateKey, GameTokenPk, DRMPk]);
 
   await deployTx.prove();
+
   let pendingTransaction = await deployTx.send();
 
   if (pendingTransaction.status === 'rejected') {
@@ -122,13 +103,27 @@ for (let i = 0; i < 3; i++) {
   }
 
   console.log(
-    `See transaction at https://minascan.io/devnet/tx/${pendingTransaction.hash}
-Waiting for transaction to be included...`
+    `See transaction at https://minascan.io/devnet/tx/${pendingTransaction.hash}`
   );
-  await pendingTransaction.wait();
 
-  console.log(`updated state!`);
-  console.timeEnd(`Deploying ${i}`);
-  console.log(`GameToken deployed at ${GameTokenAddr.toBase58()}`);
-  console.log(`DRM deployed at ${DRMAddr.toBase58()}`);
+  pendingTransactions.push(
+    pendingTransaction
+      .wait()
+      .then(() => {
+        console.log(`Transaction ${i} included successfully.`);
+        console.log(`GameToken deployed at ${GameTokenAddr.toBase58()}`);
+        console.log(`DRM deployed at ${DRMAddr.toBase58()}`);
+        console.timeEnd(`Deploying ${i}`);
+      })
+      .catch((error) => {
+        console.error(`Transaction ${i} failed to be included:`, error);
+        console.timeEnd(`Deploying ${i}`);
+      })
+  );
+
+  console.log(`Transaction ${i} sent, waiting for inclusion...`);
 }
+
+await Promise.all(pendingTransactions);
+
+console.log('All transactions have been processed.');
