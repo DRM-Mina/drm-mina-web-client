@@ -19,7 +19,7 @@ import { DeviceIdentifierProof } from './lib/DeviceIdentifierProof.js';
 import { DeviceSessionProof } from './lib/DeviceSessionProof.js';
 import { GameToken } from './GameToken.js';
 
-const { OffchainState, OffchainStateCommitments } = Experimental;
+const { OffchainState } = Experimental;
 
 export class Devices extends Struct({
   device_1: Field,
@@ -53,7 +53,8 @@ export class StateProof extends offchainState.Proof {}
 export class DRM extends SmartContract {
   @state(PublicKey) gameTokenAddress = State<PublicKey>();
 
-  @state(OffchainState.Commitments) offchainState = offchainState.commitments();
+  @state(OffchainState.Commitments) offchainStateCommitments =
+    offchainState.emptyCommitments();
 
   readonly events = {
     Session: SessionEvent,
@@ -70,6 +71,8 @@ export class DRM extends SmartContract {
     });
   }
 
+  offchainState = offchainState.init(this);
+
   @method
   async updateVerificationKey(vk: VerificationKey) {
     this.account.verificationKey.set(vk);
@@ -84,7 +87,7 @@ export class DRM extends SmartContract {
 
   @method
   async settle(proof: StateProof) {
-    await offchainState.settle(proof);
+    await this.offchainState.settle(proof);
   }
 
   @method
@@ -112,9 +115,9 @@ export class DRM extends SmartContract {
 
     const deviceIdentifierHash = deviceProof.publicOutput;
 
-    (await offchainState.fields.devices.get(userAddress)).isSome.assertFalse(
-      'User already init devices'
-    );
+    (
+      await this.offchainState.fields.devices.get(userAddress)
+    ).isSome.assertFalse('User already init devices');
 
     const prevDevices = Devices.empty();
 
@@ -149,12 +152,12 @@ export class DRM extends SmartContract {
       device_4: device_4,
     });
 
-    offchainState.fields.devices.update(userAddress, {
+    this.offchainState.fields.devices.update(userAddress, {
       from: undefined,
       to: newDevices,
     });
 
-    offchainState.fields.sessions.update(deviceIdentifierHash, {
+    this.offchainState.fields.sessions.update(deviceIdentifierHash, {
       from: undefined,
       to: UInt64.from(1),
     });
@@ -185,7 +188,9 @@ export class DRM extends SmartContract {
 
     const deviceIdentifierHash = deviceProof.publicOutput;
 
-    const currentState = await offchainState.fields.devices.get(userAddress);
+    const currentState = await this.offchainState.fields.devices.get(
+      userAddress
+    );
     currentState.assertSome('User has not init devices');
     const prevDevices = currentState.value;
 
@@ -238,25 +243,24 @@ export class DRM extends SmartContract {
       )
     );
 
-    const deletedDeviceLastSession = await offchainState.fields.sessions.get(
-      deletedDevice
-    );
+    const deletedDeviceLastSession =
+      await this.offchainState.fields.sessions.get(deletedDevice);
 
-    offchainState.fields.sessions.update(deletedDevice, {
+    this.offchainState.fields.sessions.update(deletedDevice, {
       from: deletedDeviceLastSession,
       to: UInt64.from(0),
     });
 
-    offchainState.fields.devices.update(userAddress, {
+    this.offchainState.fields.devices.update(userAddress, {
       from: prevDevices,
       to: newDevices,
     });
 
-    const newDeviceLastSession = await offchainState.fields.sessions.get(
+    const newDeviceLastSession = await this.offchainState.fields.sessions.get(
       deviceIdentifierHash
     );
 
-    offchainState.fields.sessions.update(deviceIdentifierHash, {
+    this.offchainState.fields.sessions.update(deviceIdentifierHash, {
       from: newDeviceLastSession,
       to: UInt64.from(1),
     });
@@ -276,7 +280,9 @@ export class DRM extends SmartContract {
 
     currentSessionKey.equals(newSessionKey).assertFalse();
 
-    const fetchedSession = await offchainState.fields.sessions.get(deviceHash);
+    const fetchedSession = await this.offchainState.fields.sessions.get(
+      deviceHash
+    );
     fetchedSession.assertSome('Device session not found');
 
     fetchedSession.value.assertGreaterThanOrEqual(
@@ -289,7 +295,7 @@ export class DRM extends SmartContract {
       .equals(newSessionKey)
       .assertFalse('New session key is the same as the current session key');
 
-    offchainState.fields.sessions.update(deviceHash, {
+    this.offchainState.fields.sessions.update(deviceHash, {
       from: currentSessionKey,
       to: newSessionKey,
     });
