@@ -115,10 +115,10 @@ export async function fetchWishlist(publicKey: string) {
 export async function fetchSlotNames(publicKey: string, gameId: number): Promise<string[]> {
     const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + "slot-names/" + publicKey, {
+    const res = await fetch(ENDPOINT + "slot-names/", {
         headers,
         method: "POST",
-        body: JSON.stringify({ gameId }),
+        body: JSON.stringify({ publicKey, gameId }),
     });
     const json = await res.json();
     if (json.errors) {
@@ -131,14 +131,14 @@ export async function fetchSlotNames(publicKey: string, gameId: number): Promise
 export async function postSlotNames(
     publicKey: string,
     gameId: number,
-    slots: string[]
+    slotNames: string[]
 ): Promise<boolean> {
     const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + "slot-names/" + publicKey, {
+    const res = await fetch(ENDPOINT + "slot-names/", {
         headers,
         method: "POST",
-        body: JSON.stringify({ gameId: gameId, slotNames: slots }),
+        body: JSON.stringify({ publicKey, gameId, slotNames }),
     });
 
     const json = await res.json();
