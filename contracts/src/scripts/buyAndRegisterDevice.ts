@@ -28,65 +28,74 @@ Mina.setActiveInstance(Network);
 const AlicePrivateKey = PrivateKey.fromBase58(process.env.ALICE_KEY);
 const AlicePubKey = AlicePrivateKey.toPublicKey();
 
-console.time('Compile DeviceIdentifier ');
+console.time('Compile DeviceIdentifier');
 await DeviceIdentifier.compile();
-console.timeEnd('Compile DeviceIdentifier ');
-console.time('Compile DeviceSession ');
+console.timeEnd('Compile DeviceIdentifier');
+console.time('Compile DeviceSession');
 await DeviceSession.compile();
-console.timeEnd('Compile DeviceSession ');
-console.time('Compile GameToken ');
+console.timeEnd('Compile DeviceSession');
+console.time('Compile GameToken');
 await GameToken.compile();
-console.timeEnd('Compile GameToken ');
-
-// @ts-ignore
-const gameTokenPubkey = PublicKey.fromBase58(process.env.GAMETOKEN_ADDRESS_2);
-const GameTokenInstance = new GameToken(gameTokenPubkey);
-
-// @ts-ignore
-const DRMAddress = PublicKey.fromBase58(process.env.DRM_ADDRESS_2);
-const DRMInstance = new DRM(DRMAddress);
-
-offchainState.setContractInstance(DRMInstance);
-
-console.time('Compile OffchainState');
+console.timeEnd('Compile GameToken');
+console.time('Compile offchainState');
 await offchainState.compile();
-console.timeEnd('Compile OffchainState');
+console.timeEnd('Compile offchainState');
 console.time('Compile DRM');
 await DRM.compile();
 console.timeEnd('Compile DRM');
 
-// console.time('buying game token');
-// const buyTx = await Mina.transaction(
-//   {
-//     sender: AlicePubKey,
-//     fee: 1e8,
-//   },
-//   async () => {
-//     AccountUpdate.fundNewAccount(AlicePubKey);
-//     await GameTokenInstance.mintGameToken(AlicePubKey);
-//   }
-// );
+// @ts-ignore
+const gameTokenPubkey = PublicKey.fromBase58(process.env.GAMETOKEN_ADDRESS_1);
+const GameTokenInstance = new GameToken(gameTokenPubkey);
 
-// buyTx.sign([AlicePrivateKey]);
+// @ts-ignore
+const gameTokenPubkey2 = PublicKey.fromBase58(process.env.GAMETOKEN_ADDRESS_2);
+const GameTokenInstance2 = new GameToken(gameTokenPubkey2);
 
-// await buyTx.prove();
+// @ts-ignore
+const DRMAddress = PublicKey.fromBase58(process.env.DRM_ADDRESS_1);
+const DRMInstance = new DRM(DRMAddress);
 
-// let pendingTransaction = await buyTx.send();
+DRMInstance.offchainState.setContractInstance(DRMInstance);
 
-// if (pendingTransaction.status === 'rejected') {
-//   console.log('error sending transaction (see above)');
-//   process.exit(0);
-// }
+// @ts-ignore
+const DRMAddress2 = PublicKey.fromBase58(process.env.DRM_ADDRESS_2);
+const DRMInstance2 = new DRM(DRMAddress2);
 
-// console.log(
-//   `See transaction at https://minascan.io/devnet/tx/${pendingTransaction.hash}
-// Waiting for transaction to be included...`
-// );
-// await pendingTransaction.wait();
+DRMInstance2.offchainState.setContractInstance(DRMInstance2);
 
-// console.log(`updated state!`);
+console.time('buying game token');
+const buyTx = await Mina.transaction(
+  {
+    sender: AlicePubKey,
+    fee: 1e8,
+  },
+  async () => {
+    AccountUpdate.fundNewAccount(AlicePubKey);
+    await GameTokenInstance.mintGameToken(AlicePubKey);
+  }
+);
 
-// console.timeEnd('buying game token');
+buyTx.sign([AlicePrivateKey]);
+
+await buyTx.prove();
+
+let pendingTransaction = await buyTx.send();
+
+if (pendingTransaction.status === 'rejected') {
+  console.log('error sending transaction (see above)');
+  process.exit(0);
+}
+
+console.log(
+  `See transaction at https://minascan.io/devnet/tx/${pendingTransaction.hash}
+Waiting for transaction to be included...`
+);
+await pendingTransaction.wait();
+
+console.log(`updated state!`);
+
+console.timeEnd('buying game token');
 
 const AliceDeviceRaw = mockIdentifiers[4];
 const AliceDeviceIdentifiers = Identifiers.fromRaw(AliceDeviceRaw);
@@ -124,7 +133,7 @@ await fetchAccount({
   publicKey: DRMAddress,
 });
 
-const commitment = await DRMInstance.offchainState.fetch();
+const commitment = await DRMInstance.offchainStateCommitments.fetch();
 
 const actionStateRange = {
   fromActionState: commitment?.actionState,
@@ -148,102 +157,104 @@ await Mina.fetchEvents(
 let events = await DRMInstance.fetchEvents();
 console.log('Events:', events);
 
-const devices = await offchainState.fields.devices.get(AlicePubKey);
+const devices = await DRMInstance.offchainState.fields.devices.get(AlicePubKey);
 
 console.log('Devices1:', devices.value.device_1.toString());
 console.log('Devices2:', devices.value.device_2.toString());
 console.log('Devices3:', devices.value.device_3.toString());
 console.log('Devices4:', devices.value.device_4.toString());
 
-// console.time('Alice registers a device');
-// try {
-//   const registerDeviceTx = await Mina.transaction(
-//     {
-//       sender: AlicePubKey,
-//       fee: 1e9,
-//     },
-//     async () => {
-//       await DRMInstance.initAndAddDevice(
-//         AlicePubKey,
-//         deviceIdentifier,
-//         UInt64.from(1)
-//       );
-//     }
-//   );
+console.time('Alice registers a device');
+try {
+  const registerDeviceTx = await Mina.transaction(
+    {
+      sender: AlicePubKey,
+      fee: 1e9,
+    },
+    async () => {
+      await DRMInstance.initAndAddDevice(
+        AlicePubKey,
+        deviceIdentifier,
+        UInt64.from(1)
+      );
+    }
+  );
 
-//   registerDeviceTx.sign([AlicePrivateKey]);
+  registerDeviceTx.sign([AlicePrivateKey]);
 
-//   await registerDeviceTx.prove();
-//   let pendingTransaction2 = await registerDeviceTx.send();
+  await registerDeviceTx.prove();
+  let pendingTransaction2 = await registerDeviceTx.send();
 
-//   if (pendingTransaction2.status === 'rejected') {
-//     console.log('error sending transaction (see above)');
-//     process.exit(0);
-//   }
+  if (pendingTransaction2.status === 'rejected') {
+    console.log('error sending transaction (see above)');
+    process.exit(0);
+  }
 
-//   console.log(
-//     `See transaction at https://minascan.io/devnet/tx/${pendingTransaction2.hash}
-// Waiting for transaction to be included...`
-//   );
-//   await pendingTransaction2.wait();
+  console.log(
+    `See transaction at https://minascan.io/devnet/tx/${pendingTransaction2.hash}
+Waiting for transaction to be included...`
+  );
+  await pendingTransaction2.wait();
 
-//   console.log(`updated state!`);
-// } catch (e) {
-//   console.log(e);
-// }
-// console.timeEnd('Alice registers a device');
+  console.log(`updated state!`);
+} catch (e) {
+  console.log(e);
+}
+console.timeEnd('Alice registers a device');
 
-// console.time('Setttling');
+console.time('Setttling');
 
-// let proof = await offchainState.createSettlementProof();
-// console.log('Proof created');
-// const txnProof = await Mina.transaction(
-//   {
-//     sender: AlicePubKey,
-//     fee: 1e9,
-//   },
-//   async () => {
-//     await DRMInstance.settle(proof);
-//   }
-// );
+let proof = await DRMInstance.offchainState.createSettlementProof();
+console.log('Proof created');
+const txnProof = await Mina.transaction(
+  {
+    sender: AlicePubKey,
+    fee: 1e9,
+  },
+  async () => {
+    await DRMInstance.settle(proof);
+  }
+);
 
-// await txnProof.prove();
-// let pendingTransaction3 = await txnProof.sign([AlicePrivateKey]).send();
+await txnProof.prove();
+let pendingTransaction3 = await txnProof.sign([AlicePrivateKey]).send();
 
-// if (pendingTransaction3.status === 'rejected') {
-//   console.log('error sending transaction (see above)');
-//   process.exit(0);
-// }
+if (pendingTransaction3.status === 'rejected') {
+  console.log('error sending transaction (see above)');
+  process.exit(0);
+}
 
-// console.log(
-//   `See transaction at https://minascan.io/devnet/tx/${pendingTransaction3.hash}
-// Waiting for transaction to be included...`
-// );
-// await pendingTransaction3.wait();
+console.log(
+  `See transaction at https://minascan.io/devnet/tx/${pendingTransaction3.hash}
+Waiting for transaction to be included...`
+);
+await pendingTransaction3.wait();
 
-// console.log(`updated state!`);
-// console.timeEnd('Setttling');
+console.log(`updated state!`);
+console.timeEnd('Setttling');
 
-// await fetchAccount({
-//   publicKey: AlicePubKey,
-//   tokenId: TokenId.derive(gameTokenPubkey),
-// });
+await fetchAccount({
+  publicKey: AlicePubKey,
+  tokenId: TokenId.derive(gameTokenPubkey),
+});
 
-// await fetchAccount({
-//   publicKey: gameTokenPubkey,
-// });
+await fetchAccount({
+  publicKey: gameTokenPubkey,
+});
 
-// await fetchAccount({
-//   // @ts-ignore
-//   publicKey: DRMAddress,
-// });
+await fetchAccount({
+  // @ts-ignore
+  publicKey: DRMAddress,
+});
 
-// const devices2 = await offchainState.fields.devices.get(AlicePubKey);
+const devices2 = await DRMInstance.offchainState.fields.devices.get(
+  AlicePubKey
+);
 
-// console.log('Devices1:', devices2.value.device_1.toString());
-// console.log('Devices2:', devices2.value.device_2.toString());
-// console.log('Devices3:', devices2.value.device_3.toString());
-// console.log('Devices4:', devices2.value.device_4.toString());
+console.log('Devices1:', devices2.value.device_1.toString());
+console.log('Devices2:', devices2.value.device_2.toString());
+console.log('Devices3:', devices2.value.device_3.toString());
+console.log('Devices4:', devices2.value.device_4.toString());
 
 const AliceDeviceRaw2 = mockIdentifiers[4];
 const AliceDeviceIdentifiers2 = Identifiers.fromRaw(AliceDeviceRaw2);
@@ -291,7 +302,7 @@ console.timeEnd('Alice registers another device');
 
 console.time('Setttling');
 
-let proof2 = await offchainState.createSettlementProof();
+let proof2 = await DRMInstance.offchainState.createSettlementProof();
 
 const txnProof2 = await Mina.transaction(
   {
@@ -335,14 +346,16 @@ await fetchAccount({
   publicKey: DRMAddress,
 });
 
-const devices3 = await offchainState.fields.devices.get(AlicePubKey);
+const devices3 = await DRMInstance.offchainState.fields.devices.get(
+  AlicePubKey
+);
 
 console.log('Devices1:', devices3.value.device_1.toString());
 console.log('Devices2:', devices3.value.device_2.toString());
 console.log('Devices3:', devices3.value.device_3.toString());
 console.log('Devices4:', devices3.value.device_4.toString());
 
-const session = await offchainState.fields.sessions.get(
+const session = await DRMInstance.offchainState.fields.sessions.get(
   AliceDeviceIdentifiers.hash()
 );
 
@@ -402,7 +415,7 @@ await fetchAccount({
   publicKey: DRMAddress,
 });
 
-const session2 = await offchainState.fields.sessions.get(
+const session2 = await DRMInstance.offchainState.fields.sessions.get(
   AliceDeviceIdentifiers.hash()
 );
 
@@ -413,7 +426,7 @@ console.log('Events:', events);
 
 console.time('Setttling');
 
-let proof3 = await offchainState.createSettlementProof();
+let proof3 = await DRMInstance.offchainState.createSettlementProof();
 
 const txnProof3 = await Mina.transaction(
   {
