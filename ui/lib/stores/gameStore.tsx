@@ -24,21 +24,23 @@ export const useObserveGames = () => {
 
     const hasMounted = useHasMounted();
     useEffect(() => {
-        (async () => {
-            console.log("fetching games");
-            const games: Game[] = await fetchGameData();
-            let gameList: Game[] = [];
-            let discountGames: Game[] = [];
-            games.forEach((game) => {
-                if (!game.imageFolder) {
-                    game.imageFolder = "default";
-                }
-                if (game.discount > 0) {
-                    discountGames.push(game);
-                }
-            });
-            gameStore.setGames(games);
-            gameStore.setDiscountGames(discountGames);
-        })();
+        if (hasMounted) {
+            (async () => {
+                console.log("fetching games");
+                const games: Game[] = await fetchGameData();
+                console.log("games: ", games);
+                let discountGames: Game[] = [];
+                games.forEach((game) => {
+                    if (!game.imageFolder) {
+                        game.imageFolder = "default";
+                    }
+                    if (game.discount > 0) {
+                        discountGames.push(game);
+                    }
+                });
+                gameStore.setGames(games);
+                gameStore.setDiscountGames(discountGames);
+            })();
+        }
     }, [hasMounted]);
 };

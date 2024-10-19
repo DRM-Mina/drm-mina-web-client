@@ -268,7 +268,7 @@ export default function GameDetail() {
                 </div>
             </div>
             <div className=" grid grid-cols-6">
-                <div className=" col-span-2 p-8">
+                <div className=" col-span-2 p-8 overflow-hidden">
                     <h3 className=" font-semibold">Contract Adresses</h3>
                     <Separator />
                     <div className=" mt-4 gap-2 flex flex-col text-sm">
@@ -297,7 +297,9 @@ export default function GameDetail() {
                     </div>
                 </div>
                 <div className=" col-span-1"></div>
-                <AssignDevice game={game!} />
+                <div className=" col-span-3">
+                    <AssignDevice game={game!} />
+                </div>
             </div>
             {/* <CommentSection /> */}
         </div>
