@@ -16,21 +16,27 @@ interface WorkerStoreState {
     getMinaBalance: (userAddress: string) => Promise<number>;
     getTokenOwnership: (userAddress: string, contractPublicKey: string) => Promise<boolean>;
     buyGame: (recipient: string, contractPublicKey: string) => Promise<any>;
-    initAndAddDevice: (
-        userAddress: string,
-        rawIdentifiers: RawIdentifiers,
-        deviceIndex: number,
-        contractPublicKey: string
-    ) => Promise<any>;
-    changeDevice: (
-        userAddress: string,
-        rawIdentifiers: RawIdentifiers,
-        deviceIndex: number,
-        contractPublicKey: string
-    ) => Promise<any>;
-    settle: (userAddress: string, contractAddress: string) => Promise<any>;
+    // initAndAddDevice: (
+    //     userAddress: string,
+    //     rawIdentifiers: RawIdentifiers,
+    //     deviceIndex: number,
+    //     contractPublicKey: string
+    // ) => Promise<any>;
+    // changeDevice: (
+    //     userAddress: string,
+    //     rawIdentifiers: RawIdentifiers,
+    //     deviceIndex: number,
+    //     contractPublicKey: string
+    // ) => Promise<any>;
+    // settle: (userAddress: string, contractAddress: string) => Promise<any>;
     getMaxDeviceAllowed: (contractAddress: string) => Promise<number>;
     getDevices: (userAddress: string, contractAddress: string) => Promise<any>;
+    assignDeviceToSlot: (
+        userAddress: string,
+        rawIdentifiers: RawIdentifiers,
+        deviceIndex: number,
+        contractPublicKey: string
+    ) => Promise<any>;
 }
 
 async function timeout(seconds: number): Promise<void> {
@@ -88,6 +94,10 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
             set((state) => {
                 state.gameTokenCompiled = true;
             });
+
+            console.time("DRM contract compiled");
+            await worker.loadAndCompileDRMContract();
+            console.timeEnd("DRM contract compiled");
             return;
         },
 
@@ -128,52 +138,52 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
             return json;
         },
 
-        async initAndAddDevice(
-            userAddress: string,
-            rawIdentifiers: RawIdentifiers,
-            deviceIndex: number,
-            contractPublicKey: string
-        ) {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
+        // async initAndAddDevice(
+        //     userAddress: string,
+        //     rawIdentifiers: RawIdentifiers,
+        //     deviceIndex: number,
+        //     contractPublicKey: string
+        // ) {
+        //     if (!this.worker) {
+        //         throw new Error("Worker not ready");
+        //     }
 
-            const json = await this.worker.initAndAddDevice({
-                userAddress,
-                rawIdentifiers,
-                deviceIndex,
-                contractPublicKey,
-            });
-            return json;
-        },
+        //     const json = await this.worker.initAndAddDevice({
+        //         userAddress,
+        //         rawIdentifiers,
+        //         deviceIndex,
+        //         contractPublicKey,
+        //     });
+        //     return json;
+        // },
 
-        async changeDevice(
-            userAddress: string,
-            rawIdentifiers: RawIdentifiers,
-            deviceIndex: number,
-            contractPublicKey: string
-        ) {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
+        // async changeDevice(
+        //     userAddress: string,
+        //     rawIdentifiers: RawIdentifiers,
+        //     deviceIndex: number,
+        //     contractPublicKey: string
+        // ) {
+        //     if (!this.worker) {
+        //         throw new Error("Worker not ready");
+        //     }
 
-            const json = await this.worker.changeDevice({
-                userAddress,
-                rawIdentifiers,
-                deviceIndex,
-                contractPublicKey,
-            });
-            return json;
-        },
+        //     const json = await this.worker.changeDevice({
+        //         userAddress,
+        //         rawIdentifiers,
+        //         deviceIndex,
+        //         contractPublicKey,
+        //     });
+        //     return json;
+        // },
 
-        async settle(userAddress: string, contractAddress: string) {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
+        // async settle(userAddress: string, contractAddress: string) {
+        //     if (!this.worker) {
+        //         throw new Error("Worker not ready");
+        //     }
 
-            const json = await this.worker.settle({ userAddress, contractAddress });
-            return json;
-        },
+        //     const json = await this.worker.settle({ userAddress, contractAddress });
+        //     return json;
+        // },
 
         async getMaxDeviceAllowed(contractAddress: string) {
             if (!this.worker) {
@@ -191,6 +201,25 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
 
             const arr = await this.worker.getDevices({ userAddress, contractAddress });
             return arr;
+        },
+
+        async assignDeviceToSlot(
+            userAddress: string,
+            rawIdentifiers: RawIdentifiers,
+            deviceIndex: number,
+            contractPublicKey: string
+        ) {
+            if (!this.worker) {
+                throw new Error("Worker not ready");
+            }
+
+            const json = await this.worker.assignDeviceToSlot({
+                userAddress,
+                rawIdentifiers,
+                deviceIndex,
+                contractPublicKey,
+            });
+            return json;
         },
     }))
 );

@@ -10,6 +10,10 @@ export default class WorkerClient {
         return this._call("loadAndCompileGameTokenContract", {});
     }
 
+    loadAndCompileDRMContract() {
+        return this._call("loadAndCompileDRMContract", {});
+    }
+
     async getGameTokenInstance({ contractAddress }: { contractAddress: string }) {
         const result = await this._call("getGameTokenInstance", {
             contractAddress,
@@ -17,9 +21,9 @@ export default class WorkerClient {
         return result;
     }
 
-    compileProgram() {
-        return this._call("compileProgram", {});
-    }
+    // compileProgram() {
+    //     return this._call("compileProgram", {});
+    // }
 
     fetchAccount({
         publicKey,
@@ -149,6 +153,26 @@ export default class WorkerClient {
         const result = await this._call("getDevices", {
             userAddress,
             contractAddress,
+        });
+        return result;
+    }
+
+    async assignDeviceToSlot({
+        userAddress,
+        rawIdentifiers,
+        deviceIndex,
+        contractPublicKey,
+    }: {
+        userAddress: string;
+        rawIdentifiers: RawIdentifiers;
+        deviceIndex: number;
+        contractPublicKey: string;
+    }) {
+        const result = await this._call("assignDeviceToSlot", {
+            userAddress,
+            rawIdentifiers,
+            deviceIndex,
+            contractPublicKey,
         });
         return result;
     }
