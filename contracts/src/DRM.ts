@@ -111,6 +111,7 @@ export class DRM extends SmartContract {
 
     // TODO: getAndRequireEquals()
     const maxDeviceAllowed = gameToken.maxDeviceAllowed.get();
+    deviceIndex.assertGreaterThan(UInt64.from(0));
     deviceIndex.assertLessThanOrEqual(maxDeviceAllowed);
 
     const deviceIdentifierHash = deviceProof.publicOutput;
@@ -184,6 +185,7 @@ export class DRM extends SmartContract {
 
     // TODO: getAndRequireEquals()
     const maxDeviceAllowed = gameToken.maxDeviceAllowed.get();
+    deviceIndex.assertGreaterThan(UInt64.from(0));
     deviceIndex.assertLessThanOrEqual(maxDeviceAllowed);
 
     const deviceIdentifierHash = deviceProof.publicOutput;
