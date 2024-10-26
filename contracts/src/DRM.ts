@@ -18,6 +18,7 @@ import {
 import { DeviceIdentifierProof } from './lib/DeviceIdentifierProof.js';
 import { DeviceSessionProof } from './lib/DeviceSessionProof.js';
 import { GameToken } from './GameToken.js';
+import { BundledDeviceSessionProof } from './lib/BundledDeviceSessionProof.js';
 
 const { OffchainState } = Experimental;
 
@@ -44,7 +45,7 @@ export const offchainState = OffchainState(
   },
   {
     logTotalCapacity: 20,
-    maxActionsPerProof: 5,
+    maxActionsPerProof: 10,
   }
 );
 
@@ -83,6 +84,10 @@ export class DRM extends SmartContract {
     this.account.provedState.requireEquals(Bool(false));
 
     this.gameTokenAddress.set(gameTokenAddress);
+    this.offchainState.fields.sessions.update(Field.from(0), {
+      from: undefined,
+      to: UInt64.from(0),
+    });
   }
 
   @method
@@ -280,8 +285,6 @@ export class DRM extends SmartContract {
     const currentSessionKey = deviceSessionProof.publicInput.currentSessionKey;
     const newSessionKey = deviceSessionProof.publicOutput.newSessionKey;
 
-    currentSessionKey.equals(newSessionKey).assertFalse();
-
     const fetchedSession = await this.offchainState.fields.sessions.get(
       deviceHash
     );
@@ -310,6 +313,54 @@ export class DRM extends SmartContract {
         current: newSessionKey,
       })
     );
+  }
+
+  @method
+  async submitBudledDeviceSessionProof(bundle: BundledDeviceSessionProof) {
+    bundle.verify();
+
+    const gameTokenAddress = this.gameTokenAddress.getAndRequireEquals();
+    bundle.publicInput.assertEquals(gameTokenAddress);
+
+    bundle.publicOutput.deviceCount.assertGreaterThan(
+      Field.from(0),
+      'No devices in the bundle'
+    );
+    bundle.publicOutput.deviceCount.assertLessThanOrEqual(
+      Field.from(4),
+      'Too many devices in the bundle'
+    );
+
+    const deviceSessions = bundle.publicOutput.deviceSessionOutputs;
+
+    for (let i = 0; i < 4; i++) {
+      const deviceSession = deviceSessions[i];
+
+      const deviceHash = deviceSession.hash;
+      const currentSessionKey = deviceSession.currentSessionKey;
+      const newSessionKey = deviceSession.newSessionKey;
+
+      const fetchedSession = await this.offchainState.fields.sessions.get(
+        deviceHash
+      );
+      fetchedSession.assertSome('Device session not found');
+
+      fetchedSession.value.assertEquals(currentSessionKey);
+
+      this.offchainState.fields.sessions.update(deviceHash, {
+        from: currentSessionKey,
+        to: newSessionKey,
+      });
+
+      this.emitEvent(
+        'Session',
+        new SessionEvent({
+          device: deviceHash,
+          prev: currentSessionKey,
+          current: newSessionKey,
+        })
+      );
+    }
   }
 }
 
