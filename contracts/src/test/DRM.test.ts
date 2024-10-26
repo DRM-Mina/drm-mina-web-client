@@ -5,9 +5,10 @@ import { DeviceIdentifier } from '../lib/DeviceIdentifierProof.js';
 import { DeviceSession } from '../lib/DeviceSessionProof.js';
 import { mockIdentifiers } from './mock.js';
 import { Identifiers } from '../lib/DeviceIdentifier.js';
+import { BundledDeviceSession } from '../lib/BundledDeviceSessionProof.js';
 
 describe('GameToken Contract Tests', () => {
-  const proofsEnabled = false;
+  const proofsEnabled = true;
   const GAMEPRICE1 = 10000;
   const DISCOUNT1 = 1000;
   const GAMEPRICE2 = 20000;
@@ -78,6 +79,9 @@ describe('GameToken Contract Tests', () => {
     console.time('Compile DeviceSession');
     await DeviceSession.compile();
     console.timeEnd('Compile DeviceSession');
+    console.time('Compile BundledDeviceSession');
+    await BundledDeviceSession.compile();
+    console.timeEnd('Compile BundledDeviceSession');
     console.time('Compile GameToken');
     await GameToken.compile();
     console.timeEnd('Compile GameToken');
@@ -232,7 +236,7 @@ describe('GameToken Contract Tests', () => {
       }
     );
 
-    registerDeviceTx.sign([alice.key, DRMPk1]);
+    registerDeviceTx.sign([alice.key]);
 
     await registerDeviceTx.prove();
     await registerDeviceTx.send();

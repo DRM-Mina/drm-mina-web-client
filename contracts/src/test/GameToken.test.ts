@@ -2,7 +2,7 @@ import { PrivateKey, Mina, UInt64, Bool, AccountUpdate } from 'o1js';
 import { GameToken } from '../GameToken.js';
 
 describe('GameToken Contract Tests', () => {
-  const proofsEnabled = false;
+  const proofsEnabled = true;
   const GAMEPRICE = 10000;
   const DISCOUNT = 1000;
   const TIMEOUTINTERVAL = 100;
