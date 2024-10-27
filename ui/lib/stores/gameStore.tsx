@@ -7,6 +7,8 @@ interface GameStoreState {
     games: Game[];
     isGameSet: boolean;
     discountGames: Game[];
+    trigger: boolean;
+    setTrigger: () => void;
     setGames: (gameList: Game[]) => void;
     setDiscountGames: (gameList: Game[]) => void;
 }
@@ -15,6 +17,8 @@ export const useGamesStore = create<GameStoreState>()((set) => ({
     games: [],
     isGameSet: false,
     discountGames: [],
+    trigger: false,
+    setTrigger: () => set((state) => ({ trigger: !state.trigger })),
     setGames: (gameList) => set({ games: gameList, isGameSet: true }),
     setDiscountGames: (gameList) => set({ discountGames: gameList }),
 }));
@@ -42,5 +46,5 @@ export const useObserveGames = () => {
                 gameStore.setDiscountGames(discountGames);
             })();
         }
-    }, [hasMounted]);
+    }, [hasMounted, gameStore.trigger]);
 };
