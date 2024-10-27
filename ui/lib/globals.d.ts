@@ -40,6 +40,8 @@ declare global {
         discount: number;
         tags: string[];
         downloadable: boolean;
+        averageRating: number;
+        ratingCount: number;
     }
     interface RawIdentifiers {
         cpuId: string;
@@ -48,6 +50,17 @@ declare global {
         baseboardSerial: string;
         macAddress: string[];
         diskSerial: string;
+    }
+    interface IComment {
+        _id: string;
+        user: {
+            publicKey: string;
+            _id: string;
+        };
+        gameId: number;
+        content: string;
+        rating: number;
+        createdAt: string;
     }
     interface Window {
         mina?: {
