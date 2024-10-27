@@ -57,8 +57,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       drm-mina-contracts:
-        specifier: ^0.4.0
-        version: 0.4.0(o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3)
+        specifier: ^0.4.1
+        version: 0.4.1
       embla-carousel-autoplay:
         specifier: ^8.3.0
         version: 8.3.0(embla-carousel@8.3.0)
@@ -78,8 +78,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       o1js:
-        specifier: https://pkg.pr.new/o1-labs/o1js@fc16ce3
-        version: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+        specifier: 1.9.1
+        version: 1.9.1
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -89,6 +89,9 @@ importers:
       react-hook-form:
         specifier: ^7.53.0
         version: 7.53.0(react@18.3.1)
+      react-jazzicon:
+        specifier: ^1.0.4
+        version: 1.0.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       tailwind-merge:
         specifier: ^2.5.2
         version: 2.5.4
@@ -1044,12 +1047,9 @@ packages:
     resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
     engines: {node: '>=12'}
 
-  drm-mina-contracts@0.4.0:
-    resolution: {integrity: sha512-J7lQrZJ11mVta6uO1Np/p06M6R+Ahu/AZGeeMkiDBtRCQsvkNUcPFouQ6G+LSFIa1h8SnWzTlBpg8xfMHQdGkw==}
-    version: 0.4.0
+  drm-mina-contracts@0.4.1:
+    resolution: {integrity: sha512-ZYPHbSwfTvH3x38mBC55Cj+kSj31QoKV2O4rjBn5sykgwc/UojY29nvg76NbAQRTOlvx09GdgR5/Hq3c4zcqdg==}
     engines: {node: '>=18.14.0'}
-    peerDependencies:
-      o1js: https://pkg.pr.new/o1-labs/o1js@fc16ce3
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -1615,6 +1615,9 @@ packages:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
 
+  mersenne-twister@1.1.0:
+    resolution: {integrity: sha512-mUYWsMKNrm4lfygPkL3OfGzOPTR2DBlTkBNHM//F6hGp8cLThY897crAlk3/Jo17LEOOjQUrNAx6DvgO77QJkA==}
+
   micromatch@4.0.8:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
@@ -1688,9 +1691,8 @@ packages:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
 
-  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
-    resolution: {tarball: https://pkg.pr.new/o1-labs/o1js@fc16ce3}
-    version: 1.9.0
+  o1js@1.9.1:
+    resolution: {integrity: sha512-QbeFb2WU4YpCRIz/2hu3lhwioDntpmn8M7Zl6LrIh3fIPoHMQcN9OIqE8whN83ttcioV3HsJwszKtfkBC5vEYQ==}
     engines: {node: '>=18.14.0'}
     hasBin: true
 
@@ -1870,6 +1872,12 @@ packages:
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
+
+  react-jazzicon@1.0.4:
+    resolution: {integrity: sha512-/3kWv5vtAhI18GBFoqjpxRTtL+EImuB73PAC02r/zJQ6E+PAUmoBx8edYvTCIYHwS01uFf6N3elTDqSrVPwg4w==}
+    peerDependencies:
+      react: '>=17.0.0'
+      react-dom: '>=17.0.0'
 
   react-remove-scroll-bar@2.3.6:
     resolution: {integrity: sha512-DtSYaao4mBmX+HDo5YWYdBWQwYIQQshUV/dVxFxK+KM26Wjwp1gZ6rv6OC3oujI6Bfu6Xyg3TwK533AQutsn/g==}
@@ -3196,10 +3204,12 @@ snapshots:
 
   dotenv@16.4.5: {}
 
-  drm-mina-contracts@0.4.0(o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3):
+  drm-mina-contracts@0.4.1:
     dependencies:
       dotenv: 16.4.5
-      o1js: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+      o1js: 1.9.1
+    transitivePeerDependencies:
+      - encoding
 
   eastasianwidth@0.2.0: {}
 
@@ -3930,6 +3940,8 @@ snapshots:
 
   merge2@1.4.1: {}
 
+  mersenne-twister@1.1.0: {}
+
   micromatch@4.0.8:
     dependencies:
       braces: 3.0.3
@@ -3999,7 +4011,7 @@ snapshots:
 
   normalize-path@3.0.0: {}
 
-  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
+  o1js@1.9.1:
     dependencies:
       blakejs: 1.2.1
       cachedir: 2.4.0
@@ -4173,6 +4185,12 @@ snapshots:
       react: 18.3.1
 
   react-is@16.13.1: {}
+
+  react-jazzicon@1.0.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      mersenne-twister: 1.1.0
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   react-remove-scroll-bar@2.3.6(@types/react@18.3.11)(react@18.3.1):
     dependencies:
