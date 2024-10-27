@@ -177,3 +177,100 @@ export async function postGameData(signedMessage: SignedData) {
         return false;
     }
 }
+
+export async function fetchComments(
+    gameId: number,
+    page: number = 1,
+    limit: number = 10
+): Promise<any> {
+    const headers = { "Content-Type": "application/json" };
+    const res = await fetch(`${ENDPOINT}comments/${gameId}?page=${page}&limit=${limit}`, {
+        headers,
+        method: "GET",
+    });
+    if (!res.ok) {
+        const errorResponse = await res.json();
+        console.error(errorResponse.message);
+        throw new Error(`Failed to fetch comments: ${errorResponse.message}`);
+    }
+
+    const json = await res.json();
+    return json;
+}
+
+export async function postComment(
+    gameId: number,
+    content: string,
+    rating: number
+): Promise<boolean> {
+    const headers = getAuthHeaders();
+
+    const res = await fetch(ENDPOINT + "comments", {
+        headers,
+        method: "POST",
+        body: JSON.stringify({ content, rating, gameId }),
+    });
+
+    if (!res.ok) {
+        const errorResponse = await res.json();
+        console.error(errorResponse.message);
+        throw new Error(`Failed to post comment: ${errorResponse.message}`);
+    }
+
+    return true;
+}
+
+export async function editComment(
+    commentId: number,
+    content: string,
+    rating: number
+): Promise<boolean> {
+    const headers = getAuthHeaders();
+
+    const res = await fetch(ENDPOINT + `comments/${commentId}`, {
+        headers,
+        method: "PUT",
+        body: JSON.stringify({ content, rating }),
+    });
+
+    if (!res.ok) {
+        const errorResponse = await res.json();
+        console.error(errorResponse.message);
+        throw new Error(`Failed to edit comment: ${errorResponse.message}`);
+    }
+
+    return true;
+}
+
+export async function deleteComment(commentId: number): Promise<boolean> {
+    const headers = getAuthHeaders();
+
+    const res = await fetch(ENDPOINT + `comments/${commentId}`, {
+        headers,
+        method: "DELETE",
+    });
+
+    if (!res.ok) {
+        const errorResponse = await res.json();
+        console.error(errorResponse.message);
+        throw new Error(`Failed to delete comment: ${errorResponse.message}`);
+    }
+
+    return true;
+}
+
+export async function fetchGameRating(gameId: number): Promise<number> {
+    const headers = { "Content-Type": "application/json" };
+    const res = await fetch(`${ENDPOINT}rating/${gameId}`, {
+        headers,
+        method: "GET",
+    });
+    if (!res.ok) {
+        const errorResponse = await res.json();
+        console.error(errorResponse.message);
+        throw new Error(`Failed to fetch game rating: ${errorResponse.message}`);
+    }
+
+    const json = await res.json();
+    return json.rating;
+}
