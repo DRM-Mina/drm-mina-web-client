@@ -12,6 +12,8 @@ import { useToast } from "@/components/ui/use-toast";
 import RatingInput from "./ratingInput";
 import RatingDisplay from "./ratingDisplay";
 import { useGamesStore } from "@/lib/stores/gameStore";
+import Jazzicon from "react-jazzicon";
+import { base58Decode } from "@/lib/utils";
 
 interface CommentSectionProps {
     game: Game;
@@ -140,13 +142,10 @@ export default function CommentSection({ game }: CommentSectionProps) {
                     comments.map((comment) => (
                         <div key={comment._id} className="flex space-x-4">
                             <Avatar>
-                                <AvatarImage
-                                    src={`https://gravatar.com/avatar/${comment.user.publicKey}?d=_identicon`}
-                                    alt={comment.user.publicKey}
+                                <Jazzicon
+                                    diameter={40}
+                                    seed={base58Decode(comment.user.publicKey)}
                                 />
-                                <AvatarFallback>
-                                    {/* {comment.userPubkey.slice(0, 2).toUpperCase()} */}
-                                </AvatarFallback>
                             </Avatar>
                             <div>
                                 <div className="flex items-center space-x-2">

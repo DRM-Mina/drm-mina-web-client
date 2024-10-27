@@ -27,7 +27,7 @@ export default function Wishlist() {
         }
     }, []);
 
-    return walletStore.isConnected ? (
+    return walletStore.isAuthenticated ? (
         <div className=" p-8">
             {userStore.wishlist.length === 0 ? (
                 <div className=" flex w-full justify-center ">
