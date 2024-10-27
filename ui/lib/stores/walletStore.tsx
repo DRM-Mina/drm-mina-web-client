@@ -55,6 +55,8 @@ export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
             mina.on("accountsChanged", ([wallet]) => {
                 set((state) => {
                     state.userPublicKey = wallet;
+                    state.isConnected = !!wallet;
+                    state.isAuthenticated = false;
                 });
             });
         },
@@ -80,6 +82,7 @@ export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
             set({
                 isConnected: false,
                 userPublicKey: undefined,
+                isAuthenticated: false,
             }),
         setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
     }))
