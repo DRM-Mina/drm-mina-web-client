@@ -221,7 +221,7 @@ export async function postComment(
 }
 
 export async function editComment(
-    commentId: number,
+    commentId: string,
     content: string,
     rating: number
 ): Promise<boolean> {
@@ -242,7 +242,7 @@ export async function editComment(
     return true;
 }
 
-export async function deleteComment(commentId: number): Promise<boolean> {
+export async function deleteComment(commentId: string): Promise<boolean> {
     const headers = getAuthHeaders();
 
     const res = await fetch(ENDPOINT + `comments/${commentId}`, {
