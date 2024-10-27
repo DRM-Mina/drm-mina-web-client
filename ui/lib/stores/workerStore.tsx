@@ -7,7 +7,6 @@ interface WorkerStoreState {
     isReady: boolean;
     isLoading: boolean;
     worker?: WorkerClient;
-
     gameTokenCompiled: boolean;
     pricesLoaded: boolean;
 
@@ -16,19 +15,6 @@ interface WorkerStoreState {
     getMinaBalance: (userAddress: string) => Promise<number>;
     getTokenOwnership: (userAddress: string, contractPublicKey: string) => Promise<boolean>;
     buyGame: (recipient: string, contractPublicKey: string) => Promise<any>;
-    // initAndAddDevice: (
-    //     userAddress: string,
-    //     rawIdentifiers: RawIdentifiers,
-    //     deviceIndex: number,
-    //     contractPublicKey: string
-    // ) => Promise<any>;
-    // changeDevice: (
-    //     userAddress: string,
-    //     rawIdentifiers: RawIdentifiers,
-    //     deviceIndex: number,
-    //     contractPublicKey: string
-    // ) => Promise<any>;
-    // settle: (userAddress: string, contractAddress: string) => Promise<any>;
     getMaxDeviceAllowed: (contractAddress: string) => Promise<number>;
     getDevices: (userAddress: string, contractAddress: string) => Promise<any>;
     assignDeviceToSlot: (
@@ -137,53 +123,6 @@ export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]
             const json = await this.worker.buyGame({ recipient, contractPublicKey });
             return json;
         },
-
-        // async initAndAddDevice(
-        //     userAddress: string,
-        //     rawIdentifiers: RawIdentifiers,
-        //     deviceIndex: number,
-        //     contractPublicKey: string
-        // ) {
-        //     if (!this.worker) {
-        //         throw new Error("Worker not ready");
-        //     }
-
-        //     const json = await this.worker.initAndAddDevice({
-        //         userAddress,
-        //         rawIdentifiers,
-        //         deviceIndex,
-        //         contractPublicKey,
-        //     });
-        //     return json;
-        // },
-
-        // async changeDevice(
-        //     userAddress: string,
-        //     rawIdentifiers: RawIdentifiers,
-        //     deviceIndex: number,
-        //     contractPublicKey: string
-        // ) {
-        //     if (!this.worker) {
-        //         throw new Error("Worker not ready");
-        //     }
-
-        //     const json = await this.worker.changeDevice({
-        //         userAddress,
-        //         rawIdentifiers,
-        //         deviceIndex,
-        //         contractPublicKey,
-        //     });
-        //     return json;
-        // },
-
-        // async settle(userAddress: string, contractAddress: string) {
-        //     if (!this.worker) {
-        //         throw new Error("Worker not ready");
-        //     }
-
-        //     const json = await this.worker.settle({ userAddress, contractAddress });
-        //     return json;
-        // },
 
         async getMaxDeviceAllowed(contractAddress: string) {
             if (!this.worker) {
