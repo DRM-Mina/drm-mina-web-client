@@ -2,9 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { postSlotNames } from "@/lib/api";
-import useHasMounted from "@/lib/customHooks";
 import { useDeviceStore } from "@/lib/stores/deviceStore";
-import { useUserStore } from "@/lib/stores/userStore";
+import { useObserveSlots, useUserStore } from "@/lib/stores/userStore";
 import { useWalletStore } from "@/lib/stores/walletStore";
 import { useWorkerStore } from "@/lib/stores/workerStore";
 import React, { useEffect, useState } from "react";
@@ -18,10 +17,10 @@ export default function AssignDevice({ game }: AssignDeviceProps) {
     const walletStore = useWalletStore();
     const deviceStore = useDeviceStore();
     const workerStore = useWorkerStore();
+
     const [slotNames, setSlotNames] = useState<string[]>([]);
-    const [canAssign, setCanAssign] = useState<boolean>(false);
+
     const [isAssigning, setIsAssigning] = useState<boolean>(false);
-    const [fetchingDevices, setFetchingDevices] = useState<boolean>(false);
 
     const { toast } = useToast();
 
@@ -29,61 +28,7 @@ export default function AssignDevice({ game }: AssignDeviceProps) {
         setSlotNames(userStore.slotNames);
     }, [userStore.slotNames, walletStore.userPublicKey]);
 
-    useEffect(() => {
-        console.log(
-            workerStore.isReady,
-            workerStore.gameTokenCompiled,
-            walletStore.isConnected,
-            userStore.library.includes(game.gameId),
-            // userStore.gameId === game.gameId,
-            !fetchingDevices
-        );
-        if (
-            // TODO: enable in prod
-            // deviceStore.isDeviceSet &&
-            workerStore.isReady &&
-            workerStore.gameTokenCompiled &&
-            walletStore.isConnected &&
-            userStore.library.includes(game.gameId) &&
-            // userStore.gameId === game.gameId &&
-            !fetchingDevices
-        ) {
-            (async () => {
-                setFetchingDevices(true);
-                const slotCount = await workerStore.getMaxDeviceAllowed(
-                    game.gameTokenContractAddress
-                );
-                console.log("slotCount", slotCount);
-                const devices = await workerStore.getDevices(
-                    walletStore.userPublicKey!,
-                    game.DRMContractAddress
-                );
-                console.log(devices);
-                let slotArray: string[] = [];
-                if (devices) {
-                    for (let i = 1; i <= slotCount; i++) {
-                        slotArray.push(
-                            devices[i] === "0" ? "Empty" : devices[i].slice(0, 6) + "..."
-                        );
-                    }
-                } else {
-                    for (let i = 0; i < slotCount; i++) {
-                        slotArray.push("Empty");
-                    }
-                }
-                setFetchingDevices(false);
-                if (devices) {
-                    setCanAssign(true);
-                }
-            })();
-        }
-    }, [
-        walletStore.isConnected,
-        userStore.library,
-        userStore.gameId,
-        workerStore.isReady,
-        workerStore.gameTokenCompiled,
-    ]);
+    const { canAssign, fetchingDevices } = useObserveSlots(game);
 
     return (
         <div className=" col-span-3">
@@ -129,11 +74,77 @@ export default function AssignDevice({ game }: AssignDeviceProps) {
                                 <div className=" row-span-1 flex w-full flex-col items-center justify-center gap-2">
                                     <h3 className=" text-center">{userStore.slots[index]}</h3>
                                     <Button
-                                        key={index + 1}
+                                        key={index}
                                         variant={"secondary"}
                                         disabled={isAssigning}
-                                        onClick={() => {
-                                            console.log("Assigning");
+                                        onClick={async () => {
+                                            if (!deviceStore.isDeviceSet) {
+                                                toast({
+                                                    title: "No device information provided",
+                                                    description:
+                                                        "Please try to connect through the our desktop app",
+                                                });
+                                                return;
+                                            }
+
+                                            if (!workerStore.isReady) {
+                                                toast({
+                                                    title: "Web workers not ready",
+                                                    description:
+                                                        "Please wait for the web workers to get ready",
+                                                });
+                                                return;
+                                            }
+
+                                            if (!walletStore.userPublicKey || !game) return;
+
+                                            if (isAssigning) {
+                                                toast({
+                                                    title: "Still assigning",
+                                                    description:
+                                                        "Please wait for the previous assignment to complete",
+                                                });
+                                                return;
+                                            }
+
+                                            setIsAssigning(true);
+                                            try {
+                                                console.log("Assigning device to slot", index);
+                                                const transactionJSON =
+                                                    await workerStore.assignDeviceToSlot(
+                                                        walletStore.userPublicKey,
+                                                        deviceStore.device,
+                                                        index + 1,
+                                                        game.DRMContractAddress
+                                                    );
+
+                                                const { hash } = await (
+                                                    window as any
+                                                ).mina.sendTransaction({
+                                                    transaction: transactionJSON,
+                                                    feePayer: {
+                                                        fee: 0.1,
+                                                        memo: "",
+                                                    },
+                                                });
+                                                setIsAssigning(false);
+                                                const transactionLink = `https://minascan.io/devnet/tx/${hash}`;
+                                                toast({
+                                                    title: "Transaction sent",
+                                                    description: `Transaction sent, check it out at ${transactionLink}`,
+                                                });
+                                            } catch (error) {
+                                                console.error(
+                                                    "Error assigning device to slot",
+                                                    error
+                                                );
+                                                setIsAssigning(false);
+                                                toast({
+                                                    title: "Error assigning device to slot",
+                                                    description:
+                                                        "There was an error assigning the device to the slot, please try again later",
+                                                });
+                                            }
                                         }}
                                     >
                                         {isAssigning ? "Assigning" : "Assign This"}
@@ -144,7 +155,7 @@ export default function AssignDevice({ game }: AssignDeviceProps) {
                     })}
                 </div>
             ) : (
-                <></>
+                <>false</>
             )}
         </div>
     );
