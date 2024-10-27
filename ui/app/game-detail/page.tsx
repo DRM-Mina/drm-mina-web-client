@@ -1,9 +1,9 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { ChevronLeft, Download, Gift } from "lucide-react";
+import { ChevronLeft, Download, Gift, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,8 @@ import { useDeviceStore } from "@/lib/stores/deviceStore";
 import { useToast } from "@/components/ui/use-toast";
 import dynamic from "next/dynamic";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import CommentSection from "./commentSection";
+import RatingDisplay from "./ratingDisplay";
 
 const ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -26,11 +28,26 @@ const BuyGame = dynamic(() => import("../components/buyGame"), {
 const AssignDevice = dynamic(() => import("./assignDevice"));
 
 export default function GameDetail() {
-    const gameName = useSearchParams().get("game");
-    const device = useSearchParams().get("device");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    // const gameName = useSearchParams().get("game");
+    // const device = useSearchParams().get("device");
+    const [gameName, setGameName] = useState<string | null>(null);
+    const [device, setDevice] = useState<string | null>(null);
     const gameStore = useGamesStore();
     const deviceStore = useDeviceStore();
     const { toast } = useToast();
+
+    useEffect(() => {
+        console.log(searchParams);
+        if (searchParams.has("game")) {
+            setGameName(searchParams.get("game"));
+        }
+        if (searchParams.has("device")) {
+            setDevice(searchParams.get("device"));
+        }
+    }, [searchParams]);
+
     useEffect(() => {
         if (device) {
             if (deviceStore.isDeviceSet === false) {
@@ -46,8 +63,6 @@ export default function GameDetail() {
             });
         }
     }, []);
-
-    const router = useRouter();
 
     const game = gameStore.games.find((game) => game.name === gameName);
     const imageCount = game?.imageCount || 1;
@@ -183,7 +198,12 @@ export default function GameDetail() {
                         </div>
                         <div className=" mt-8 text-base">{game?.description}</div>
 
-                        {/* <div>Total Reviews: 5 (4.3)</div> */}
+                        <div className=" flex flex-col items-center justify-center">
+                            <RatingDisplay rating={game?.averageRating || 0} />
+                            <div className=" flex items-center">
+                                Total Reviews: {game?.ratingCount}
+                            </div>
+                        </div>
 
                         <div>
                             {Array.from(game?.tags || []).map((tag, index) => (
@@ -301,7 +321,7 @@ export default function GameDetail() {
                     <AssignDevice game={game!} />
                 </div>
             </div>
-            {/* <CommentSection /> */}
+            {game && <CommentSection game={game} />}
         </div>
     );
 }
