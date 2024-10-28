@@ -199,7 +199,7 @@ export default function GameDetail() {
                         <div className=" mt-8 text-base">{game?.description}</div>
 
                         <div className=" flex flex-col items-center justify-center">
-                            <RatingDisplay rating={game?.averageRating || 0} />
+                            <RatingDisplay rating={game?.averageRating || 0} decimals={true} />
                             <div className=" flex items-center text-sm">
                                 Total Reviews: {game?.ratingCount}
                             </div>

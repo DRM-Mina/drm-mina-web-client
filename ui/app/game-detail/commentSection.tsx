@@ -1,12 +1,18 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Avatar } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { deleteComment, editComment, fetchComments, postComment } from "@/lib/api";
-import { Star } from "lucide-react";
 import { useWalletStore } from "@/lib/stores/walletStore";
 import { useToast } from "@/components/ui/use-toast";
 import RatingInput from "./ratingInput";
@@ -15,11 +21,7 @@ import { useGamesStore } from "@/lib/stores/gameStore";
 import Jazzicon from "react-jazzicon";
 import { base58Decode } from "@/lib/utils";
 
-interface CommentSectionProps {
-    game: Game;
-}
-
-export default function CommentSection({ game }: CommentSectionProps) {
+export default function CommentSection({ game }: { game: Game }) {
     const [comments, setComments] = useState<IComment[]>([]);
     const [newComment, setNewComment] = useState("");
     const [rating, setRating] = useState(1);
@@ -45,7 +47,6 @@ export default function CommentSection({ game }: CommentSectionProps) {
                     currentPage,
                     currentLimit
                 );
-                console.log(comments, totalComments, totalPages);
 
                 setComments(comments);
                 setTotalPages(totalPages);
@@ -135,12 +136,6 @@ export default function CommentSection({ game }: CommentSectionProps) {
         }
     };
 
-    const handleLoadMore = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage((prevPage) => prevPage + 1);
-        }
-    };
-
     return (
         <div className="p-4">
             <h2 className="text-xl font-semibold mb-4">Comments ( {totalComments} )</h2>
@@ -208,7 +203,7 @@ export default function CommentSection({ game }: CommentSectionProps) {
                                     seed={base58Decode(comment.user.publicKey)}
                                 />
                             </Avatar>
-                            <div>
+                            <div className="flex flex-col gap-1 items-start">
                                 <div className="flex items-center space-x-2">
                                     <span className="font-medium">
                                         {comment.user.publicKey.slice(0, 4) +
@@ -219,7 +214,7 @@ export default function CommentSection({ game }: CommentSectionProps) {
                                         {new Date(comment.createdAt).toLocaleString()}
                                     </span>
                                 </div>
-                                <RatingDisplay rating={comment.rating} />
+                                <RatingDisplay rating={comment.rating} decimals={false} />
                                 <p>{comment.content}</p>
                                 {walletStore.isAuthenticated &&
                                     walletStore.userPublicKey === comment.user.publicKey && (
@@ -250,10 +245,34 @@ export default function CommentSection({ game }: CommentSectionProps) {
                 )}
                 {isLoading && <p>Loading comments...</p>}
             </div>
-            {currentPage < totalPages && (
-                <Button onClick={handleLoadMore} className="mt-4" disabled={isLoading}>
-                    {isLoading ? "Loading..." : "Load More Comments"}
-                </Button>
+            {currentPage <= totalPages && (
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                onClick={() => {
+                                    if (currentPage > 1) {
+                                        setCurrentPage((prevPage) => prevPage - 1);
+                                        setPostTrigger((prev) => !prev);
+                                    }
+                                }}
+                            />
+                        </PaginationItem>
+                        <PaginationItem>
+                            <PaginationLink isActive={false}>{currentPage}</PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                            <PaginationNext
+                                onClick={() => {
+                                    if (currentPage < totalPages) {
+                                        setCurrentPage((prevPage) => prevPage + 1);
+                                        setPostTrigger((prev) => !prev);
+                                    }
+                                }}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
             )}
         </div>
     );

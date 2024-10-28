@@ -1,7 +1,7 @@
 import React from "react";
 import { Star } from "lucide-react";
 
-export default function RatingDisplay({ rating }: { rating: number }) {
+export default function RatingDisplay({ rating, decimals }: { rating: number; decimals: boolean }) {
     return (
         <div className="flex flex-row gap-1 items-center justify-center">
             <div className="flex space-x-1">
@@ -21,7 +21,7 @@ export default function RatingDisplay({ rating }: { rating: number }) {
                     );
                 })}
             </div>
-            <div className=" text-sm">({rating.toFixed(1)})</div>
+            {decimals && <div className=" text-sm">({rating.toFixed(1)})</div>}
         </div>
     );
 }

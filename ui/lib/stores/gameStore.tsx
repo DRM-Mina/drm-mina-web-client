@@ -30,20 +30,23 @@ export const useObserveGames = () => {
     useEffect(() => {
         if (hasMounted) {
             (async () => {
-                console.log("fetching games");
-                const games: Game[] = await fetchGameData();
-                console.log("games: ", games);
-                let discountGames: Game[] = [];
-                games.forEach((game) => {
-                    if (!game.imageFolder) {
-                        game.imageFolder = "default";
-                    }
-                    if (game.discount > 0) {
-                        discountGames.push(game);
-                    }
-                });
-                gameStore.setGames(games);
-                gameStore.setDiscountGames(discountGames);
+                try {
+                    const games: Game[] = await fetchGameData();
+                    console.log("games: ", games);
+                    let discountGames: Game[] = [];
+                    games.forEach((game) => {
+                        if (!game.imageFolder) {
+                            game.imageFolder = "default";
+                        }
+                        if (game.discount > 0) {
+                            discountGames.push(game);
+                        }
+                    });
+                    gameStore.setGames(games);
+                    gameStore.setDiscountGames(discountGames);
+                } catch (error) {
+                    console.log("Error in useObserveGames: ", error);
+                }
             })();
         }
     }, [hasMounted, gameStore.trigger]);
