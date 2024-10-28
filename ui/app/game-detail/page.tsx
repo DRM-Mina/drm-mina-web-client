@@ -200,7 +200,7 @@ export default function GameDetail() {
 
                         <div className=" flex flex-col items-center justify-center">
                             <RatingDisplay rating={game?.averageRating || 0} />
-                            <div className=" flex items-center">
+                            <div className=" flex items-center text-sm">
                                 Total Reviews: {game?.ratingCount}
                             </div>
                         </div>
