@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { deleteComment, fetchComments, postComment } from "@/lib/api";
+import { deleteComment, editComment, fetchComments, postComment } from "@/lib/api";
 import { Star } from "lucide-react";
 import { useWalletStore } from "@/lib/stores/walletStore";
 import { useToast } from "@/components/ui/use-toast";
@@ -28,6 +28,9 @@ export default function CommentSection({ game }: CommentSectionProps) {
     const [currentLimit, setCurrentLimit] = useState(10);
     const [totalComments, setTotalComments] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+    const [editingContent, setEditingContent] = useState("");
     const [postTrigger, setPostTrigger] = useState(false);
     const walletStore = useWalletStore();
     const gameStore = useGamesStore();
@@ -80,8 +83,35 @@ export default function CommentSection({ game }: CommentSectionProps) {
         }
     };
 
-    const handleEditComment = (commentId: string) => {
-        console.log("Edit comment", commentId);
+    const handleEditComment = (commentId: string, content: string) => {
+        setIsEditing(true);
+        const comment = comments.find((comment) => comment._id === commentId);
+        setRating(comment?.rating || 1);
+        setEditingCommentId(commentId);
+        setEditingContent(content);
+    };
+
+    const handleUpdateComment = async () => {
+        if (!editingContent.trim() || !editingCommentId) return;
+
+        try {
+            const res = await editComment(editingCommentId, editingContent, rating);
+            if (res) {
+                toast({ title: "Comment updated successfully!" });
+                setComments((prev) =>
+                    prev.map((comment) =>
+                        comment._id === editingCommentId
+                            ? { ...comment, content: editingContent, rating: rating }
+                            : comment
+                    )
+                );
+                setIsEditing(false);
+                setEditingCommentId(null);
+                setEditingContent("");
+            }
+        } catch (error) {
+            toast({ title: "Failed to update comment" });
+        }
     };
 
     const handleDeleteComment = async (commentId: string) => {
@@ -114,27 +144,58 @@ export default function CommentSection({ game }: CommentSectionProps) {
     return (
         <div className="p-4">
             <h2 className="text-xl font-semibold mb-4">Comments ( {totalComments} )</h2>
-            {walletStore.isAuthenticated ? (
+            {walletStore.isAuthenticated && !isEditing ? (
                 <div className="mb-6 max-w-96">
                     <Textarea
                         placeholder="Add a comment..."
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                     />
-                    <div className="mt-2 flex items-center">
+                    <div className="m-2 flex items-center">
                         <span className="mr-2">Your Rating:</span>
                         <RatingInput rating={rating} setRating={setRating} />
                     </div>
                     <Button
-                        className="mt-2"
+                        className="m-2"
                         onClick={handleAddComment}
-                        disabled={isLoading || !newComment.trim()}
+                        disabled={!newComment.trim()}
                     >
                         Post Comment
                     </Button>
                 </div>
+            ) : walletStore.isAuthenticated && isEditing ? (
+                <div className="mb-6 max-w-96">
+                    <Textarea
+                        placeholder="Edit your comment..."
+                        value={editingContent}
+                        onChange={(e) => setEditingContent(e.target.value)}
+                    />
+                    <div className="m-2 flex items-center">
+                        <span className="mr-2">Your Rating:</span>
+                        <RatingInput rating={rating} setRating={setRating} />
+                    </div>
+                    <Button
+                        className="m-2"
+                        onClick={handleUpdateComment}
+                        disabled={!editingContent.trim()}
+                    >
+                        Edit Comment
+                    </Button>
+                    <Button
+                        className="m-2"
+                        onClick={() => {
+                            setIsEditing(false);
+                            setRating(1);
+                            setEditingCommentId(null);
+                            setEditingContent("");
+                        }}
+                        variant="outline"
+                    >
+                        Cancel
+                    </Button>
+                </div>
             ) : (
-                <p>Please connect your wallet to post a comment.</p>
+                <p>Please connect your wallet to post or edit comments.</p>
             )}
             <Separator />
             <div className="mt-6 space-y-6">
@@ -158,9 +219,7 @@ export default function CommentSection({ game }: CommentSectionProps) {
                                         {new Date(comment.createdAt).toLocaleString()}
                                     </span>
                                 </div>
-                                <div className="flex items-center">
-                                    <RatingDisplay rating={comment.rating} />
-                                </div>
+                                <RatingDisplay rating={comment.rating} />
                                 <p>{comment.content}</p>
                                 {walletStore.isAuthenticated &&
                                     walletStore.userPublicKey === comment.user.publicKey && (
@@ -168,7 +227,9 @@ export default function CommentSection({ game }: CommentSectionProps) {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => handleEditComment(comment._id)}
+                                                onClick={() =>
+                                                    handleEditComment(comment._id, comment.content)
+                                                }
                                             >
                                                 Edit
                                             </Button>
