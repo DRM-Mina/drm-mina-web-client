@@ -45,7 +45,7 @@ export const offchainState = OffchainState(
   },
   {
     logTotalCapacity: 20,
-    maxActionsPerProof: 10,
+    maxActionsPerProof: 22,
   }
 );
 
