@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -27,7 +27,7 @@ const BuyGame = dynamic(() => import("../components/buyGame"), {
 
 const AssignDevice = dynamic(() => import("./assignDevice"));
 
-export default function GameDetail() {
+function Detail() {
     const router = useRouter();
     const searchParams = useSearchParams();
     // const gameName = useSearchParams().get("game");
@@ -323,5 +323,13 @@ export default function GameDetail() {
             </div>
             {game && <CommentSection game={game} />}
         </div>
+    );
+}
+
+export default function GameDetail() {
+    return (
+        <Suspense fallback={<div>Loading game...</div>}>
+            <Detail />
+        </Suspense>
     );
 }

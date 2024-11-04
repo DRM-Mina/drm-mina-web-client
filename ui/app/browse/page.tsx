@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useGamesStore } from "@/lib/stores/gameStore";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -6,7 +7,7 @@ import React, { useEffect, useState } from "react";
 
 const ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
-export default function Browse() {
+function GamesList() {
     const router = useRouter();
     const params = useSearchParams().get("search") || "";
     const gameStore = useGamesStore();
@@ -56,5 +57,13 @@ export default function Browse() {
                 </Card>
             ))}
         </div>
+    );
+}
+
+export default function Browse() {
+    return (
+        <Suspense fallback={<div>Loading games...</div>}>
+            <GamesList />
+        </Suspense>
     );
 }

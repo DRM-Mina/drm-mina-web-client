@@ -1,3 +1,4 @@
+"use client";
 import { useEffect } from "react";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
@@ -31,7 +32,7 @@ export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
 
         async initializeWallet() {
             if (typeof mina === "undefined") {
-                throw new Error("Auro wallet not installed");
+                return;
             }
 
             const [wallet] = await mina.getAccounts();
@@ -49,7 +50,7 @@ export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
             }),
         observeWalletChange() {
             if (typeof mina === "undefined") {
-                throw new Error("Auro wallet not installed");
+                return;
             }
 
             mina.on("accountsChanged", ([wallet]) => {

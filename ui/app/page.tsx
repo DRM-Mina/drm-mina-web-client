@@ -1,10 +1,10 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useDeviceStore } from "@/lib/stores/deviceStore";
 import Store from "@/app/store/page";
 
-export default function Home() {
+function Page() {
     const gameName = useSearchParams()?.get("game");
     const device = useSearchParams()?.get("device");
     const router = useRouter();
@@ -21,4 +21,12 @@ export default function Home() {
     }, []);
 
     return <Store />;
+}
+
+export default function Home() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <Page />
+        </Suspense>
+    );
 }
