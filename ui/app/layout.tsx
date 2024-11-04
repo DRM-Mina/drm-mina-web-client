@@ -1,5 +1,4 @@
 "use client";
-// import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -13,7 +12,7 @@ import { useObserveGames } from "@/lib/stores/gameStore";
 import useHasMounted from "@/lib/customHooks";
 import { useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { useObserveUserLibrary } from "@/lib/stores/userStore";
+import { useObserveUserLibraryRoutine } from "@/lib/stores/userStore";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -45,7 +44,7 @@ export default function RootLayout({
         })();
     }, [hasMounted]);
 
-    useObserveUserLibrary();
+    useObserveUserLibraryRoutine();
 
     return (
         <html lang="en">
