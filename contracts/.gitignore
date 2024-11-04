@@ -18,3 +18,5 @@ mock.ts
 src/temp/
 control.ts
 cache
+
+src/local/
