@@ -30,39 +30,47 @@ const AssignDevice = dynamic(() => import("./assignDevice"));
 function Detail() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    // const gameName = useSearchParams().get("game");
-    // const device = useSearchParams().get("device");
     const [gameName, setGameName] = useState<string | null>(null);
-    const [device, setDevice] = useState<string | null>(null);
+    // const [device, setDevice] = useState<string | null>(null);
     const gameStore = useGamesStore();
     const deviceStore = useDeviceStore();
     const { toast } = useToast();
 
     useEffect(() => {
-        console.log(searchParams);
-        if (searchParams.has("game")) {
-            setGameName(searchParams.get("game"));
-        }
-        if (searchParams.has("device")) {
-            setDevice(searchParams.get("device"));
-        }
-    }, [searchParams]);
+        const gameParam = searchParams.get("game");
+        const deviceParam = searchParams.get("device");
 
-    useEffect(() => {
-        if (device) {
-            if (deviceStore.isDeviceSet === false) {
-                deviceStore.setDevice(JSON.parse(device));
-                router.push("/game-detail?game=" + gameName);
+        if (gameParam) {
+            setGameName(gameParam);
+        }
+        // if (deviceParam) {
+        //     setDevice(deviceParam);
+        //     console.log("device set");
+        // }
+
+        if (deviceParam) {
+            if (!deviceStore.isDeviceSet) {
+                try {
+                    const decodedDevice = decodeURIComponent(deviceParam);
+                    const deviceObj = JSON.parse(decodedDevice);
+                    console.log(deviceObj);
+                    deviceStore.setDevice(deviceObj);
+                    if (gameParam) {
+                        router.push(`/game-detail?game=${encodeURIComponent(gameParam)}`);
+                    }
+                } catch (error) {
+                    console.error("Failed to parse device parameter:", error);
+                }
+            }
+            if (deviceStore.isDeviceSet) {
+                toast({
+                    title: "Device set",
+                    description:
+                        "We got your device information 🕵️, just kidding your information is only yours ✨",
+                });
             }
         }
-        if (deviceStore.isDeviceSet) {
-            toast({
-                title: "Device set",
-                description:
-                    "We got your device information 🕵️, just kidding your information is only yours ✨",
-            });
-        }
-    }, []);
+    }, [searchParams, deviceStore, router]);
 
     const game = gameStore.games.find((game) => game.name === gameName);
     const imageCount = game?.imageCount || 1;
@@ -233,7 +241,7 @@ function Detail() {
                                         <></>
                                     )}
                                     <span className="text-base">
-                                        {game?.price! - game?.discount!}
+                                        {game?.price! - game?.discount! || "Loading..."}
                                     </span>
                                     <img
                                         src={"/mina.webp"}

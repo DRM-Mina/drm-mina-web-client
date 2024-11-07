@@ -64,7 +64,7 @@ export default function BuyGame({ game }: BuyGameProps) {
                 const transactionLink = `https://minascan.io/devnet/tx/${hash}`;
                 toast({
                     title: "Transaction sent",
-                    description: `Transaction sent, check it out at ${transactionLink}`,
+                    description: `${transactionLink}`,
                 });
             } catch (error) {
                 setIsReady(true);
@@ -93,7 +93,7 @@ export default function BuyGame({ game }: BuyGameProps) {
         >
             {!isReady ? (
                 <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {/* Spinner */}
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Loading...
                 </>
             ) : (
