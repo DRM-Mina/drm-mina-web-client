@@ -17,6 +17,7 @@ import {
   UInt64,
 } from "o1js";
 import { DeviceSession } from "drm-mina-contracts/build/src/lib/DeviceSessionProof";
+import { BundledDeviceSession } from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof";
 
 // type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
@@ -76,6 +77,9 @@ const functions = {
     console.time("Compile DeviceSession complete");
     await DeviceSession.compile();
     console.timeEnd("Compile DeviceSession complete");
+    console.time("Compile BundleDeviceSession complete");
+    await BundledDeviceSession.compile();
+    console.timeEnd("Compile BundleDeviceSession complete");
     console.log("Compiling DRM offchain state");
     console.time("Compile offchainState complete");
     await offchainState.compile();
@@ -510,6 +514,7 @@ const functions = {
     );
 
     await transaction.prove();
+    transaction.sign([GameTokenPk, DRMPk]);
     return JSON.stringify({
       GameTokenAddr: GameTokenAddr.toBase58(),
       GameTokenPk: GameTokenPk.toBase58(),

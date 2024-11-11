@@ -60,8 +60,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       drm-mina-contracts:
-        specifier: ^0.4.1
-        version: 0.4.1
+        specifier: 0.4.3
+        version: 0.4.3
       embla-carousel-autoplay:
         specifier: ^8.3.0
         version: 8.3.0(embla-carousel@8.3.0)
@@ -81,8 +81,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       o1js:
-        specifier: 1.9.1
-        version: 1.9.1
+        specifier: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+        version: https://pkg.pr.new/o1-labs/o1js@fc16ce3
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1063,8 +1063,8 @@ packages:
     resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
     engines: {node: '>=12'}
 
-  drm-mina-contracts@0.4.1:
-    resolution: {integrity: sha512-ZYPHbSwfTvH3x38mBC55Cj+kSj31QoKV2O4rjBn5sykgwc/UojY29nvg76NbAQRTOlvx09GdgR5/Hq3c4zcqdg==}
+  drm-mina-contracts@0.4.3:
+    resolution: {integrity: sha512-3kyKEJytpTNxt2F73CYtNLoYzEbUPUtV4NAR7gD3KMHWH03zvZssscf4eSNvyQvxt6wguHupFdFvnok/baAmew==}
     engines: {node: '>=18.14.0'}
 
   eastasianwidth@0.2.0:
@@ -1707,8 +1707,9 @@ packages:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
 
-  o1js@1.9.1:
-    resolution: {integrity: sha512-QbeFb2WU4YpCRIz/2hu3lhwioDntpmn8M7Zl6LrIh3fIPoHMQcN9OIqE8whN83ttcioV3HsJwszKtfkBC5vEYQ==}
+  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
+    resolution: {tarball: https://pkg.pr.new/o1-labs/o1js@fc16ce3}
+    version: 1.9.0
     engines: {node: '>=18.14.0'}
     hasBin: true
 
@@ -3237,10 +3238,10 @@ snapshots:
 
   dotenv@16.4.5: {}
 
-  drm-mina-contracts@0.4.1:
+  drm-mina-contracts@0.4.3:
     dependencies:
       dotenv: 16.4.5
-      o1js: 1.9.1
+      o1js: https://pkg.pr.new/o1-labs/o1js@fc16ce3
     transitivePeerDependencies:
       - encoding
 
@@ -4044,7 +4045,7 @@ snapshots:
 
   normalize-path@3.0.0: {}
 
-  o1js@1.9.1:
+  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
     dependencies:
       blakejs: 1.2.1
       cachedir: 2.4.0
