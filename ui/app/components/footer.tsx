@@ -35,14 +35,14 @@ export default function Footer({ className }: FooterProps) {
                     </a>
                 </div>
 
-                {/* <div>
-          <div
-            className=" cursor-pointer text-sm font-normal underline underline-offset-4"
-            onClick={() => router.push("/register")}
-          >
-            Register Game
-          </div>
-        </div> */}
+                <div>
+                    <div
+                        className=" cursor-pointer text-sm font-normal underline underline-offset-4"
+                        onClick={() => router.push("/register")}
+                    >
+                        Register Game
+                    </div>
+                </div>
 
                 <div></div>
 
