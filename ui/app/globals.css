@@ -133,24 +133,27 @@
 .loader {
   width: 20px;
   height: 10px;
-  --_g: no-repeat radial-gradient(farthest-side, #fff 94%, #0000);
+  --_g: no-repeat
+    radial-gradient(farthest-side, hsl(var(--foreground)) 94%, transparent);
   background: var(--_g) 50% 0, var(--_g) 100% 0;
   background-size: 4px 4px;
   position: relative;
   animation: l23-0 1.5s linear infinite;
 }
+
 .loader:before {
   content: "";
   position: absolute;
   height: 4px;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #fff;
+  background: hsl(var(--foreground));
   left: 0;
   top: 0;
   animation: l23-1 1.5s linear infinite,
     l23-2 0.5s cubic-bezier(0, 200, 0.8, 200) infinite;
 }
+
 @keyframes l23-0 {
   0%,
   31% {
