@@ -4,161 +4,253 @@ import { immer } from "zustand/middleware/immer";
 import WorkerClient from "../workerClient";
 
 interface WorkerStoreState {
-    isReady: boolean;
-    isLoading: boolean;
-    worker?: WorkerClient;
-    gameTokenCompiled: boolean;
-    pricesLoaded: boolean;
+  isReady: boolean;
+  isLoading: boolean;
+  worker?: WorkerClient;
+  gameTokenCompiled: boolean;
+  drmCompiled: boolean;
+  pricesLoaded: boolean;
+  status: string;
+  progress: number;
 
-    startWorker: () => Promise<void>;
-    getPrice: (contractPublicKey: string) => Promise<void>;
-    getMinaBalance: (userAddress: string) => Promise<number>;
-    getTokenOwnership: (userAddress: string, contractPublicKey: string) => Promise<boolean>;
-    buyGame: (recipient: string, contractPublicKey: string) => Promise<any>;
-    getMaxDeviceAllowed: (contractAddress: string) => Promise<number>;
-    getDevices: (userAddress: string, contractAddress: string) => Promise<any>;
-    assignDeviceToSlot: (
-        userAddress: string,
-        rawIdentifiers: RawIdentifiers,
-        deviceIndex: number,
-        contractPublicKey: string
-    ) => Promise<any>;
+  startWorker: () => Promise<void>;
+  getPrice: (contractPublicKey: string) => Promise<void>;
+  getMinaBalance: (userAddress: string) => Promise<number>;
+  getTokenOwnership: (
+    userAddress: string,
+    contractPublicKey: string
+  ) => Promise<boolean>;
+  buyGame: (recipient: string, contractPublicKey: string) => Promise<any>;
+  getMaxDeviceAllowed: (contractAddress: string) => Promise<number>;
+  getDevices: (userAddress: string, contractAddress: string) => Promise<any>;
+  assignDeviceToSlot: (
+    userAddress: string,
+    rawIdentifiers: RawIdentifiers,
+    deviceIndex: number,
+    contractPublicKey: string
+  ) => Promise<any>;
+  deployGameToken: (
+    publisher: string,
+    symbol: string,
+    price: number,
+    discount: number,
+    timeoutInterval: number,
+    numberOfDevices: number
+  ) => Promise<{
+    GameTokenAddr: string;
+    GameTokenPk: string;
+    DRMAddr: string;
+    DRMPk: string;
+    transaction: any;
+  }>;
 }
 
 async function timeout(seconds: number): Promise<void> {
-    return new Promise<void>((resolve) => {
-        setTimeout(() => {
-            resolve();
-        }, seconds * 1000);
-    });
+  return new Promise<void>((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, seconds * 1000);
+  });
 }
 
-export const useWorkerStore = create<WorkerStoreState, [["zustand/immer", never]]>(
-    immer((set) => ({
-        isReady: false,
-        isLoading: false,
-        worker: undefined,
+export const useWorkerStore = create<
+  WorkerStoreState,
+  [["zustand/immer", never]]
+>(
+  immer((set) => ({
+    isReady: false,
+    isLoading: false,
+    worker: undefined,
 
-        gameTokenCompiled: false,
-        pricesLoaded: false,
+    gameTokenCompiled: false,
+    drmCompiled: false,
+    pricesLoaded: false,
+    status: "",
+    progress: 0,
 
-        async startWorker() {
-            console.time("Worker started");
+    async startWorker() {
+      console.time("Worker started");
 
-            if (this.isLoading) {
-                return;
-            }
+      if (this.isLoading) {
+        return;
+      }
 
-            if (this.isReady) {
-                return;
-            }
+      if (this.isReady) {
+        return;
+      }
 
-            set((state) => {
-                state.isLoading = true;
-            });
-            const worker = new WorkerClient();
+      set((state) => {
+        state.isLoading = true;
+        state.status = "Starting";
+      });
+      const worker = new WorkerClient();
 
-            await timeout(5);
+      await timeout(5);
 
-            set((state) => {
-                state.worker = worker;
-            });
+      set((state) => {
+        state.worker = worker;
+        state.progress = 5;
+      });
 
-            console.time("Active instance set to devnet");
-            await worker.setActiveInstanceToDevnet();
-            console.timeEnd("Active instance set to devnet");
+      console.time("Active instance set to devnet");
+      await worker.setActiveInstanceToDevnet();
+      console.timeEnd("Active instance set to devnet");
 
-            set((state) => {
-                state.isReady = true;
-            });
-            console.timeEnd("Worker started");
+      set((state) => {
+        state.isReady = true;
+        state.status = "GameToken";
+        state.progress = 7;
+      });
+      console.timeEnd("Worker started");
 
-            console.time("GameToken contract compiled");
-            await worker.loadAndCompileGameTokenContract();
-            console.timeEnd("GameToken contract compiled");
+      await worker.loadAndCompileGameTokenContract();
 
-            set((state) => {
-                state.gameTokenCompiled = true;
-            });
+      set((state) => {
+        state.gameTokenCompiled = true;
+        state.status = "DeviceIdentifier";
+        state.progress = 15;
+      });
 
-            console.time("DRM contract compiled");
-            await worker.loadAndCompileDRMContract();
-            console.timeEnd("DRM contract compiled");
-            return;
-        },
+      await worker.compileDeviceIdentifier();
 
-        async getPrice(contractPublicKey: string) {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
+      set((state) => {
+        state.status = "DeviceSession";
+        state.progress = 25;
+      });
 
-            const json = await this.worker.getPrice({ contractPublicKey });
-            return json;
-        },
+      await worker.compileDeviceSession();
 
-        async getMinaBalance(userAddress: string) {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
+      set((state) => {
+        state.status = "BundledDeviceSession";
+        state.progress = 35;
+      });
 
-            const balance = await this.worker.getMinaBalance({ userAddress });
-            return Number(balance);
-        },
+      await worker.compileBundledDeviceSession();
 
-        async getTokenOwnership(userAddress: string, contractPublicKey: string) {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
-            console.log("Getting token ownership", userAddress, contractPublicKey);
-            const balance = await this.worker.getTokenOwnership({ userAddress, contractPublicKey });
-            console.log("Balance: ", balance);
-            return Number(balance) > 0;
-        },
+      set((state) => {
+        state.status = "OffchainState";
+        state.progress = 45;
+      });
 
-        async buyGame(recipient: string, contractPublicKey: string) {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
+      await worker.compileOffchainState();
 
-            const json = await this.worker.buyGame({ recipient, contractPublicKey });
-            return json;
-        },
+      set((state) => {
+        state.status = "DRM";
+        state.progress = 90;
+      });
 
-        async getMaxDeviceAllowed(contractAddress: string) {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
+      await worker.loadAndCompileDRMContract();
 
-            const max = await this.worker.getMaxDeviceAllowed({ contractAddress });
-            return Number(max);
-        },
+      set((state) => {
+        state.drmCompiled = true;
+        state.status = "Finished";
+        state.progress = 100;
+      });
+      return;
+    },
 
-        async getDevices(userAddress: string, contractAddress: string) {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
+    async getPrice(contractPublicKey: string) {
+      if (!this.worker) {
+        throw new Error("Worker not ready");
+      }
 
-            const arr = await this.worker.getDevices({ userAddress, contractAddress });
-            return arr;
-        },
+      const json = await this.worker.getPrice({ contractPublicKey });
+      return json;
+    },
 
-        async assignDeviceToSlot(
-            userAddress: string,
-            rawIdentifiers: RawIdentifiers,
-            deviceIndex: number,
-            contractPublicKey: string
-        ) {
-            if (!this.worker) {
-                throw new Error("Worker not ready");
-            }
+    async getMinaBalance(userAddress: string) {
+      if (!this.worker) {
+        throw new Error("Worker not ready");
+      }
 
-            const json = await this.worker.assignDeviceToSlot({
-                userAddress,
-                rawIdentifiers,
-                deviceIndex,
-                contractPublicKey,
-            });
-            return json;
-        },
-    }))
+      const balance = await this.worker.getMinaBalance({ userAddress });
+      return Number(balance);
+    },
+
+    async getTokenOwnership(userAddress: string, contractPublicKey: string) {
+      if (!this.worker) {
+        throw new Error("Worker not ready");
+      }
+      console.log("Getting token ownership", userAddress, contractPublicKey);
+      const balance = await this.worker.getTokenOwnership({
+        userAddress,
+        contractPublicKey,
+      });
+      console.log("Balance: ", balance);
+      return Number(balance) > 0;
+    },
+
+    async buyGame(recipient: string, contractPublicKey: string) {
+      if (!this.worker) {
+        throw new Error("Worker not ready");
+      }
+
+      const json = await this.worker.buyGame({ recipient, contractPublicKey });
+      return json;
+    },
+
+    async getMaxDeviceAllowed(contractAddress: string) {
+      if (!this.worker) {
+        throw new Error("Worker not ready");
+      }
+
+      const max = await this.worker.getMaxDeviceAllowed({ contractAddress });
+      return Number(max);
+    },
+
+    async getDevices(userAddress: string, contractAddress: string) {
+      if (!this.worker) {
+        throw new Error("Worker not ready");
+      }
+
+      const arr = await this.worker.getDevices({
+        userAddress,
+        contractAddress,
+      });
+      return arr;
+    },
+
+    async assignDeviceToSlot(
+      userAddress: string,
+      rawIdentifiers: RawIdentifiers,
+      deviceIndex: number,
+      contractPublicKey: string
+    ) {
+      if (!this.worker) {
+        throw new Error("Worker not ready");
+      }
+
+      const json = await this.worker.assignDeviceToSlot({
+        userAddress,
+        rawIdentifiers,
+        deviceIndex,
+        contractPublicKey,
+      });
+      return json;
+    },
+
+    async deployGameToken(
+      publisher: string,
+      symbol: string,
+      price: number,
+      discount: number,
+      timeoutInterval: number,
+      numberOfDevices: number
+    ) {
+      if (!this.worker) {
+        throw new Error("Worker not ready");
+      }
+
+      return JSON.parse(
+        (await this.worker.deployGameToken({
+          publisher,
+          symbol,
+          price,
+          discount,
+          timeoutInterval,
+          numberOfDevices,
+        })) as string
+      );
+    },
+  }))
 );

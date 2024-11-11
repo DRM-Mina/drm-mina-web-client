@@ -14,6 +14,22 @@ export default class WorkerClient {
     return this._call("loadAndCompileGameTokenContract", {});
   }
 
+  compileDeviceIdentifier() {
+    return this._call("compileDeviceIdentifier", {});
+  }
+
+  compileDeviceSession() {
+    return this._call("compileDeviceSession", {});
+  }
+
+  compileBundledDeviceSession() {
+    return this._call("compileBundledDeviceSession", {});
+  }
+
+  compileOffchainState() {
+    return this._call("compileOffchainState", {});
+  }
+
   loadAndCompileDRMContract() {
     return this._call("loadAndCompileDRMContract", {});
   }

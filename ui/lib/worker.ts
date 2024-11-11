@@ -58,6 +58,31 @@ const functions = {
     }
     await state.GameToken.contract.compile();
   },
+  compileDeviceIdentifier: async (args: {}): Promise<void> => {
+    console.log("Compiling DeviceIdentifier");
+    console.time("Compile DeviceIdentifier complete");
+    state.deviceIdentifierProgram = DeviceIdentifier;
+    await DeviceIdentifier.compile();
+    console.timeEnd("Compile DeviceIdentifier complete");
+  },
+  compileDeviceSession: async (args: {}): Promise<void> => {
+    console.log("Compiling DeviceSession");
+    console.time("Compile DeviceSession complete");
+    await DeviceSession.compile();
+    console.timeEnd("Compile DeviceSession complete");
+  },
+  compileBundledDeviceSession: async (args: {}): Promise<void> => {
+    console.log("Compiling BundleDeviceSession");
+    console.time("Compile BundleDeviceSession complete");
+    await BundledDeviceSession.compile();
+    console.timeEnd("Compile BundleDeviceSession complete");
+  },
+  compileOffchainState: async (args: {}): Promise<void> => {
+    console.log("Compiling DRM offchain state");
+    console.time("Compile offchainState complete");
+    await offchainState.compile();
+    console.timeEnd("Compile offchainState complete");
+  },
   loadAndCompileDRMContract: async (args: {}): Promise<void> => {
     if (!state.DRM.contract) {
       const contract = (await import(`drm-mina-contracts/build/src/DRM.js`))[
@@ -68,22 +93,6 @@ const functions = {
       }
       state.DRM.contract = contract;
     }
-    console.log("Compiling DeviceIdentifier");
-    console.time("Compile DeviceIdentifier complete");
-    state.deviceIdentifierProgram = DeviceIdentifier;
-    await DeviceIdentifier.compile();
-    console.timeEnd("Compile DeviceIdentifier complete");
-    console.log("Compiling DeviceSession");
-    console.time("Compile DeviceSession complete");
-    await DeviceSession.compile();
-    console.timeEnd("Compile DeviceSession complete");
-    console.time("Compile BundleDeviceSession complete");
-    await BundledDeviceSession.compile();
-    console.timeEnd("Compile BundleDeviceSession complete");
-    console.log("Compiling DRM offchain state");
-    console.time("Compile offchainState complete");
-    await offchainState.compile();
-    console.timeEnd("Compile offchainState complete");
     console.log("Compiling DRM contract");
     console.time("Compile DRM complete");
     await state.DRM.contract.compile();
