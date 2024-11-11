@@ -14,7 +14,7 @@ coverage
 keys
 .env
 
-mock.ts
+mock.*
 
 src/temp/
 src/scripts/

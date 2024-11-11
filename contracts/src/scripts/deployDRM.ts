@@ -10,9 +10,10 @@ import {
 } from 'o1js';
 import { DRM, offchainState } from '../DRM.js';
 import { GameToken } from '../GameToken.js';
-import { DeviceIdentifier } from '../lib/index.js';
 import { DeviceSession } from '../lib/DeviceSessionProof.js';
 import dotenv from 'dotenv';
+import { BundledDeviceSession } from '../lib/BundledDeviceSessionProof.js';
+import { DeviceIdentifier } from '../lib/DeviceIdentifierProof.js';
 
 dotenv.config();
 
@@ -44,6 +45,9 @@ console.timeEnd('Compile DeviceIdentifier');
 console.time('Compile DeviceSession');
 await DeviceSession.compile();
 console.timeEnd('Compile DeviceSession');
+console.time('Compile BundledDeviceSession');
+await BundledDeviceSession.compile();
+console.timeEnd('Compile BundledDeviceSession');
 console.time('Compile GameToken');
 await GameToken.compile();
 console.timeEnd('Compile GameToken');
@@ -77,7 +81,7 @@ for (let i = 0; i < 3; i++) {
       AccountUpdate.fundNewAccount(publisherPubKey, 3);
       await GameTokenInstance.deploy({
         symbol: 'DRM',
-        src: '',
+        src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/GameToken.ts',
       });
       await GameTokenInstance.initialize(
         publisherPubKey,

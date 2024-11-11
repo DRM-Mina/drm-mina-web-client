@@ -9,10 +9,12 @@ import {
 } from 'o1js';
 import { DRM, offchainState } from '../DRM.js';
 import { GameToken } from '../GameToken.js';
-import { DeviceIdentifier, Identifiers } from '../lib/index.js';
+
 import { DeviceSession } from '../lib/DeviceSessionProof.js';
 import dotenv from 'dotenv';
 import { mockIdentifiers } from '../test/mock.js';
+import { DeviceIdentifier } from '../lib/DeviceIdentifierProof.js';
+import { Identifiers } from '../lib/DeviceIdentifier.js';
 
 dotenv.config();
 
