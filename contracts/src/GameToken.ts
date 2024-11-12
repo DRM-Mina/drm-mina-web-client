@@ -188,6 +188,27 @@ export class GameToken extends TokenContractV2 {
     this.publisher.set(publisher);
   }
 
+  @method
+  async setBulk(
+    publisher: PublicKey,
+    price: UInt64,
+    discount: UInt64,
+    timeoutInterval: UInt64,
+    maxDeviceAllowed: UInt64
+  ) {
+    this.onlyPublisher();
+    this.publisher.getAndRequireEquals();
+    this.gamePrice.getAndRequireEquals();
+    this.discount.getAndRequireEquals();
+    this.timeoutInterval.getAndRequireEquals();
+    this.maxDeviceAllowed.getAndRequireEquals();
+    this.publisher.set(publisher);
+    this.gamePrice.set(price);
+    this.discount.set(discount);
+    this.timeoutInterval.set(timeoutInterval);
+    this.maxDeviceAllowed.set(maxDeviceAllowed);
+  }
+
   private onlyPublisher() {
     const publisher = this.publisher.getAndRequireEquals();
     AccountUpdate.create(publisher).requireSignature();
