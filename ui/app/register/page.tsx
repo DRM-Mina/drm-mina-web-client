@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useWalletStore } from "@/lib/stores/walletStore";
 import GameTokenDeploy from "./gameTokenDeploy";
-import Dashboard from "./dashboard";
+import GameTokenUpdate from "./gameTokenUpdate";
 
 export default function Register() {
   const walletStore = useWalletStore();
@@ -54,11 +54,11 @@ export default function Register() {
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="2" id="r2" />
-                <Label htmlFor="r2">Dashboard</Label>
+                <Label htmlFor="r2">GameToken Update</Label>
               </div>
             </RadioGroup>
 
-            {form === "1" ? <GameTokenDeploy /> : <Dashboard />}
+            {form === "1" ? <GameTokenDeploy /> : <GameTokenUpdate />}
           </div>
         ) : (
           <div className="flex h-[80vh] items-center justify-center">

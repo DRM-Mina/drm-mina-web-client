@@ -209,10 +209,6 @@ const functions = {
     await transaction.prove();
     return transaction.toJSON();
   },
-  // compileProgram: async (args: {}): Promise<void> => {
-  //     state.deviceIdentifierProgram = DeviceIdentifier;
-  //     await DeviceIdentifier.compile();
-  // },
   initAndAddDevice: async ({
     userAddress,
     rawIdentifiers,
@@ -471,7 +467,6 @@ const functions = {
       });
     }
   },
-
   deployGameToken: async ({
     publisher,
     symbol,
@@ -531,6 +526,66 @@ const functions = {
       DRMPk: DRMPk.toBase58(),
       transaction: transaction.toJSON(),
     });
+  },
+  fetchGameTokenFields: async ({
+    contractAddress,
+  }: {
+    contractAddress: string;
+  }) => {
+    const contractInstance = await functions.getGameTokenInstance({
+      contractAddress,
+    });
+    const publisher = await contractInstance.publisher.fetch();
+    const price = await contractInstance.gamePrice.fetch();
+    const discount = await contractInstance.discount.fetch();
+    const timeoutInterval = await contractInstance.timeoutInterval.fetch();
+    const numberOfDevices = await contractInstance.maxDeviceAllowed.fetch();
+    return JSON.stringify({
+      publisher: publisher?.toBase58(),
+      price: Number(price?.toString()),
+      discount: Number(discount?.toString()),
+      timeoutInterval: Number(timeoutInterval?.toString()),
+      numberOfDevices: Number(numberOfDevices?.toString()),
+    });
+  },
+  setGameTokenFields: async ({
+    contractAddress,
+    publisher,
+    price,
+    discount,
+    timeoutInterval,
+    numberOfDevices,
+  }: {
+    contractAddress: string;
+    publisher: string;
+    price: number;
+    discount: number;
+    timeoutInterval: number;
+    numberOfDevices: number;
+  }) => {
+    const contractInstance = await functions.getGameTokenInstance({
+      contractAddress,
+    });
+
+    const publisherPubKey = PublicKey.fromBase58(publisher);
+
+    const transaction = await Mina.transaction(
+      {
+        sender: publisherPubKey,
+        fee: 1e8,
+      },
+      async () => {
+        await contractInstance.setBulk(
+          publisherPubKey,
+          UInt64.from(price),
+          UInt64.from(discount),
+          UInt64.from(timeoutInterval),
+          UInt64.from(numberOfDevices)
+        );
+      }
+    );
+    await transaction.prove();
+    return transaction.toJSON();
   },
 };
 export type WorkerFunctions = keyof typeof functions;

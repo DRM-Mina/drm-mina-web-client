@@ -43,6 +43,21 @@ interface WorkerStoreState {
     DRMPk: string;
     transaction: any;
   }>;
+  fetchGameTokenFields: (contractAddress: string) => Promise<{
+    publisher: string;
+    price: number;
+    discount: number;
+    timeoutInterval: number;
+    numberOfDevices: number;
+  }>;
+  setGameTokenFields: (
+    contractAddress: string,
+    publisher: string,
+    price: number,
+    discount: number,
+    timeoutInterval: number,
+    numberOfDevices: number
+  ) => Promise<any>;
 }
 
 async function timeout(seconds: number): Promise<void> {
@@ -251,6 +266,52 @@ export const useWorkerStore = create<
           numberOfDevices,
         })) as string
       );
+    },
+
+    async fetchGameTokenFields(contractAddress: string): Promise<{
+      publisher: string;
+      price: number;
+      discount: number;
+      timeoutInterval: number;
+      numberOfDevices: number;
+    }> {
+      if (!this.worker) {
+        throw new Error("Worker not ready");
+      }
+
+      const jsonString = await this.worker.fetchGameTokenFields({
+        contractAddress,
+      });
+      return JSON.parse(jsonString) as {
+        publisher: string;
+        price: number;
+        discount: number;
+        timeoutInterval: number;
+        numberOfDevices: number;
+      };
+    },
+
+    async setGameTokenFields(
+      contractAddress: string,
+      publisher: string,
+      price: number,
+      discount: number,
+      timeoutInterval: number,
+      numberOfDevices: number
+    ) {
+      if (!this.worker) {
+        throw new Error("Worker not ready");
+      }
+
+      const json = await this.worker.setGameTokenFields({
+        contractAddress,
+        publisher,
+        price,
+        discount,
+        timeoutInterval,
+        numberOfDevices,
+      });
+      return json;
     },
   }))
 );

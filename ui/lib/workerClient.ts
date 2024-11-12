@@ -223,6 +223,41 @@ export default class WorkerClient {
     return result;
   }
 
+  fetchGameTokenFields({
+    contractAddress,
+  }: {
+    contractAddress: string;
+  }): Promise<any> {
+    return this._call("fetchGameTokenFields", {
+      contractAddress,
+    });
+  }
+
+  setGameTokenFields({
+    contractAddress,
+    publisher,
+    price,
+    discount,
+    timeoutInterval,
+    numberOfDevices,
+  }: {
+    contractAddress: string;
+    publisher: string;
+    price: number;
+    discount: number;
+    timeoutInterval: number;
+    numberOfDevices: number;
+  }): Promise<any> {
+    return this._call("setGameTokenFields", {
+      contractAddress,
+      publisher,
+      price,
+      discount,
+      timeoutInterval,
+      numberOfDevices,
+    });
+  }
+
   worker: Worker;
 
   promises: {
