@@ -1,13 +1,10 @@
 "use client";
 import { Label } from "@/components/ui/label";
-
 import React, { useState } from "react";
-import dynamic from "next/dynamic";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useWalletStore } from "@/lib/stores/walletStore";
-
-const GameTokenDeploy = dynamic(() => import("./gameTokenDeploy"));
-const SecondForm = dynamic(() => import("./secondForm"));
+import GameTokenDeploy from "./gameTokenDeploy";
+import Dashboard from "./dashboard";
 
 export default function Register() {
   const walletStore = useWalletStore();
@@ -57,11 +54,11 @@ export default function Register() {
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="2" id="r2" />
-                <Label htmlFor="r2">Marketplace Register Form</Label>
+                <Label htmlFor="r2">Dashboard</Label>
               </div>
             </RadioGroup>
 
-            {form === "1" ? <GameTokenDeploy /> : <SecondForm />}
+            {form === "1" ? <GameTokenDeploy /> : <Dashboard />}
           </div>
         ) : (
           <div className="flex h-[80vh] items-center justify-center">
