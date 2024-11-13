@@ -221,10 +221,14 @@ export default function GameTokenDeploy() {
           className=" w-full"
           onClick={handleSubmit}
           disabled={
-            isProcessing || !walletStore.isConnected || !workerStore.drmCompiled
+            isProcessing ||
+            !walletStore.isAuthenticated ||
+            !workerStore.drmCompiled
           }
         >
-          {isProcessing || !walletStore.isConnected || !workerStore.drmCompiled
+          {isProcessing ||
+          !walletStore.isAuthenticated ||
+          !workerStore.drmCompiled
             ? "Loading..."
             : "Deploy Game Token"}
         </Button>

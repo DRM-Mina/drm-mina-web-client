@@ -12,7 +12,7 @@ export default function Register() {
   return (
     <div className=" h-full p-8">
       <div className=" flex h-full w-full justify-center">
-        {walletStore.isConnected ? (
+        {walletStore.isAuthenticated ? (
           <div className=" flex  h-full w-full flex-col gap-4 px-4">
             <div className=" py-4">
               <h1 className="text-3xl font-medium">Game Registration</h1>
