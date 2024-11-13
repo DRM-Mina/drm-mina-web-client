@@ -74,9 +74,11 @@ export default function Wishlist() {
                       className="card-image flex h-full w-full rounded-lg object-cover"
                     />
                   </CardContent>
-                  <div className="card-drawer flex h-full flex-col items-center gap-3 bg-background p-3">
-                    <CardTitle className="flex">{game.name}</CardTitle>
-                    <CardDescription className=" flex">
+                  <div className="card-drawer flex h-full flex-col items-center gap-3 bg-background p-6">
+                    <CardTitle className="flex items-center justify-center text-center">
+                      {game.name}
+                    </CardTitle>
+                    <CardDescription className=" flex items-center justify-center text-center">
                       {game.description}
                     </CardDescription>
                   </div>
