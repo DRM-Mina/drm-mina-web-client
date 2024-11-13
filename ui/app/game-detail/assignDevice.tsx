@@ -105,8 +105,8 @@ export default function AssignDevice({ game }: { game: Game }) {
   };
 
   return (
-    <div className=" col-span-3">
-      {canAssign ? (
+    <div className=" col-span-3 h-full">
+      {canAssign && game && userStore.library.includes(game.gameId) && (
         <div className=" grid h-full w-full grid-cols-4 p-4">
           {userStore.slotNames.map((_, index) => {
             return (
@@ -145,7 +145,15 @@ export default function AssignDevice({ game }: { game: Game }) {
             );
           })}
         </div>
-      ) : null}
+      )}
+      {!canAssign && game && userStore.library.includes(game.gameId) && (
+        <div className="grid col-span-3 h-full place-items-center">
+          <div className=" flex gap-1 flex-col justify-center items-center">
+            <div>Waiting Compilation</div>
+            <div className="ping-pong"></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
