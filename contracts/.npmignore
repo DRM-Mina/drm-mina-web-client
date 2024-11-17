@@ -20,3 +20,4 @@ src/temp/
 src/scripts/
 control.ts
 cache
+local/
