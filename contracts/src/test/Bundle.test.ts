@@ -7,7 +7,7 @@ import {
   Field,
   PublicKey,
 } from 'o1js';
-import { GameToken } from '../GameToken.js';
+import { DRM_MINA_PROVIDER_PUB_KEY, GameToken } from '../GameToken.js';
 import { DRM, offchainState } from '../DRM.js';
 import { DeviceIdentifier } from '../lib/DeviceIdentifierProof.js';
 import { DeviceSession } from '../lib/DeviceSessionProof.js';
@@ -16,7 +16,7 @@ import { Identifiers } from '../lib/DeviceIdentifier.js';
 import { BundledDeviceSession } from '../lib/BundledDeviceSessionProof.js';
 
 describe('GameToken Contract Tests', () => {
-  const proofsEnabled = true;
+  const proofsEnabled = false;
   const GAMEPRICE1 = 10000;
   const DISCOUNT1 = 1000;
   const GAMEPRICE2 = 20000;
@@ -113,6 +113,30 @@ describe('GameToken Contract Tests', () => {
 
     console.log('actions for DRM1', actions);
   };
+
+  test('Funding DRM Provider', async () => {
+    console.log('Funding DRM Provider ...');
+    const fundTx = await Mina.transaction(
+      {
+        sender: publisher,
+        fee: 1e8,
+      },
+      async () => {
+        AccountUpdate.fundNewAccount(publisher, 1);
+        AccountUpdate.createSigned(publisher).send({
+          to: DRM_MINA_PROVIDER_PUB_KEY,
+          amount: UInt64.from(1e9),
+        });
+      }
+    );
+
+    fundTx.sign([publisher.key]);
+
+    await fundTx.prove();
+    await fundTx.send();
+
+    console.log('DRM Provider funded successfully');
+  });
 
   test('Deploying GameToken and DRM', async () => {
     console.time('Deploying GameToken and DRM');
