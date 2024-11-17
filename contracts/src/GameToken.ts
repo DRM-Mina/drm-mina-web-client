@@ -38,11 +38,11 @@ export const GameTokenErrors = {
   unbalancedTransaction: 'Transaction is unbalanced',
 };
 
-const DRM_MINA_PROVIDER_PUB_KEY = PublicKey.fromBase58(
+export const DRM_MINA_PROVIDER_PUB_KEY = PublicKey.fromBase58(
   'B62qpEFazytE2FYeosfYx4SokFEZnFxMddhfyBLBCiF66VShp6x6qjo'
 );
 
-const DRM_MINA_FEE_PERCENTAGE = 5;
+export const DRM_MINA_FEE_PERCENTAGE = 5;
 
 export class GameToken extends TokenContractV2 {
   @state(PublicKey) publisher = State<PublicKey>();
@@ -136,8 +136,6 @@ export class GameToken extends TokenContractV2 {
       .assertGreaterThanOrEqual(totalPrice);
     const publisherPayment = totalPrice.sub(drmFeeAmount);
 
-    const mintAmount = UInt64.from(1);
-
     recipient
       .equals(this.address)
       .assertFalse(GameTokenErrors.noTransferFromCirculation);
@@ -148,6 +146,7 @@ export class GameToken extends TokenContractV2 {
     const drmFeeUpdate = AccountUpdate.createSigned(recipient);
     drmFeeUpdate.send({ to: DRM_MINA_PROVIDER_PUB_KEY, amount: drmFeeAmount });
 
+    const mintAmount = UInt64.from(1);
     const accountUpdate = this.internal.mint({
       address: recipient,
       amount: mintAmount,
@@ -213,20 +212,41 @@ export class GameToken extends TokenContractV2 {
     this.publisher.set(publisher);
   }
 
+  @method
+  async setBulk(
+    publisher: PublicKey,
+    price: UInt64,
+    discount: UInt64,
+    timeoutInterval: UInt64,
+    maxDeviceAllowed: UInt64
+  ) {
+    this.onlyPublisher();
+    this.publisher.getAndRequireEquals();
+    this.gamePrice.getAndRequireEquals();
+    this.discount.getAndRequireEquals();
+    this.timeoutInterval.getAndRequireEquals();
+    this.maxDeviceAllowed.getAndRequireEquals();
+    this.publisher.set(publisher);
+    this.gamePrice.set(price);
+    this.discount.set(discount);
+    this.timeoutInterval.set(timeoutInterval);
+    this.maxDeviceAllowed.set(maxDeviceAllowed);
+  }
+
   private onlyPublisher() {
     const publisher = this.publisher.getAndRequireEquals();
     AccountUpdate.create(publisher).requireSignature();
   }
 
-  private async ensureAdminSignature() {
-    const admin = await Provable.witnessAsync(PublicKey, async () => {
-      let pk = await this.publisher.fetch();
-      assert(pk !== undefined, 'could not fetch admin public key');
-      return pk;
-    });
-    this.publisher.requireEquals(admin);
-    return AccountUpdate.createSigned(admin);
-  }
+  // private async ensureAdminSignature() {
+  //   const admin = await Provable.witnessAsync(PublicKey, async () => {
+  //     let pk = await this.publisher.fetch();
+  //     assert(pk !== undefined, 'could not fetch admin public key');
+  //     return pk;
+  //   });
+  //   this.publisher.requireEquals(admin);
+  //   return AccountUpdate.createSigned(admin);
+  // }
 
   private checkPermissionsUpdate(update: AccountUpdate) {
     let permissions = update.update.permissions;
