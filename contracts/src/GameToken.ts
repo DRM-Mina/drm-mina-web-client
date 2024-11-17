@@ -37,6 +37,13 @@ export const GameTokenErrors = {
     'Flash-minting or unbalanced transaction detected. Please make sure that your transaction is balanced, and that your `AccountUpdate`s are ordered properly, so that tokens are not received before they are sent.',
   unbalancedTransaction: 'Transaction is unbalanced',
 };
+
+export const DRM_MINA_PROVIDER_PUB_KEY = PublicKey.fromBase58(
+  'B62qpEFazytE2FYeosfYx4SokFEZnFxMddhfyBLBCiF66VShp6x6qjo'
+);
+
+export const DRM_MINA_FEE_PERCENTAGE = 5;
+
 export class GameToken extends TokenContractV2 {
   @state(PublicKey) publisher = State<PublicKey>();
 
@@ -114,15 +121,32 @@ export class GameToken extends TokenContractV2 {
     const price = this.gamePrice.getAndRequireEquals();
     const discount = this.discount.getAndRequireEquals();
     const publisherAddress = this.publisher.getAndRequireEquals();
+
     const totalPrice = price.sub(discount);
-    const mintAmount = UInt64.from(1);
+    const drmFeeAmount = Provable.witness(UInt64, () => {
+      return UInt64.from(
+        Math.ceil(
+          (Number(totalPrice.toBigInt()) * DRM_MINA_FEE_PERCENTAGE) / 100
+        )
+      );
+    });
+
+    drmFeeAmount
+      .mul(100 / DRM_MINA_FEE_PERCENTAGE)
+      .assertGreaterThanOrEqual(totalPrice);
+    const publisherPayment = totalPrice.sub(drmFeeAmount);
+
     recipient
       .equals(this.address)
       .assertFalse(GameTokenErrors.noTransferFromCirculation);
 
-    const mintFeeUpdate = AccountUpdate.createSigned(recipient);
-    mintFeeUpdate.send({ to: publisherAddress, amount: totalPrice });
+    const publisherFeeUpdate = AccountUpdate.createSigned(recipient);
+    publisherFeeUpdate.send({ to: publisherAddress, amount: publisherPayment });
 
+    const drmFeeUpdate = AccountUpdate.createSigned(recipient);
+    drmFeeUpdate.send({ to: DRM_MINA_PROVIDER_PUB_KEY, amount: drmFeeAmount });
+
+    const mintAmount = UInt64.from(1);
     const accountUpdate = this.internal.mint({
       address: recipient,
       amount: mintAmount,
@@ -214,15 +238,15 @@ export class GameToken extends TokenContractV2 {
     AccountUpdate.create(publisher).requireSignature();
   }
 
-  private async ensureAdminSignature() {
-    const admin = await Provable.witnessAsync(PublicKey, async () => {
-      let pk = await this.publisher.fetch();
-      assert(pk !== undefined, 'could not fetch admin public key');
-      return pk;
-    });
-    this.publisher.requireEquals(admin);
-    return AccountUpdate.createSigned(admin);
-  }
+  // private async ensureAdminSignature() {
+  //   const admin = await Provable.witnessAsync(PublicKey, async () => {
+  //     let pk = await this.publisher.fetch();
+  //     assert(pk !== undefined, 'could not fetch admin public key');
+  //     return pk;
+  //   });
+  //   this.publisher.requireEquals(admin);
+  //   return AccountUpdate.createSigned(admin);
+  // }
 
   private checkPermissionsUpdate(update: AccountUpdate) {
     let permissions = update.update.permissions;

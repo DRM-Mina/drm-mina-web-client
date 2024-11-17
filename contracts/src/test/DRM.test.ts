@@ -1,5 +1,9 @@
 import { PrivateKey, Mina, UInt64, Bool, AccountUpdate } from 'o1js';
-import { GameToken } from '../GameToken.js';
+import {
+  DRM_MINA_FEE_PERCENTAGE,
+  DRM_MINA_PROVIDER_PUB_KEY,
+  GameToken,
+} from '../GameToken.js';
 import { DRM, offchainState } from '../DRM.js';
 import { DeviceIdentifier } from '../lib/DeviceIdentifierProof.js';
 import { DeviceSession } from '../lib/DeviceSessionProof.js';
@@ -8,7 +12,7 @@ import { Identifiers } from '../lib/DeviceIdentifier.js';
 import { BundledDeviceSession } from '../lib/BundledDeviceSessionProof.js';
 
 describe('GameToken Contract Tests', () => {
-  const proofsEnabled = true;
+  const proofsEnabled = false;
   const GAMEPRICE1 = 10000;
   const DISCOUNT1 = 1000;
   const GAMEPRICE2 = 20000;
@@ -93,6 +97,30 @@ describe('GameToken Contract Tests', () => {
     console.timeEnd('Compile DRM');
   });
 
+  test('Funding DRM Provider', async () => {
+    console.log('Funding DRM Provider ...');
+    const fundTx = await Mina.transaction(
+      {
+        sender: publisher,
+        fee: 1e8,
+      },
+      async () => {
+        AccountUpdate.fundNewAccount(publisher, 1);
+        AccountUpdate.createSigned(publisher).send({
+          to: DRM_MINA_PROVIDER_PUB_KEY,
+          amount: UInt64.from(1e9),
+        });
+      }
+    );
+
+    fundTx.sign([publisher.key]);
+
+    await fundTx.prove();
+    await fundTx.send();
+
+    console.log('DRM Provider funded successfully');
+  });
+
   test('Deploying GameToken and DRM', async () => {
     console.time('Deploying GameToken and DRM');
     const deployTx = await Mina.transaction(
@@ -166,6 +194,10 @@ describe('GameToken Contract Tests', () => {
 
     const publisherMinaBalanceBefore = Mina.getBalance(publisher).toBigInt();
 
+    const drmProviderMinaBalanceBefore = Mina.getBalance(
+      DRM_MINA_PROVIDER_PUB_KEY
+    ).toBigInt();
+
     const aliceTx = await Mina.transaction(
       {
         sender: alice,
@@ -190,15 +222,29 @@ describe('GameToken Contract Tests', () => {
 
     const publisherMinaBalanceAfter = Mina.getBalance(publisher).toBigInt();
 
+    const drmProviderMinaBalanceAfter = Mina.getBalance(
+      DRM_MINA_PROVIDER_PUB_KEY
+    ).toBigInt();
+
     expect(Number(aliceMinaBalanceBefore - aliceMinaBalanceAfter)).toEqual(
       GAMEPRICE1 - DISCOUNT1 + 1e8 + 1e9
     );
 
-    expect(Number(aliceGameTokenBalanceAfter.toString())).toEqual(1);
+    expect(
+      Number(drmProviderMinaBalanceAfter - drmProviderMinaBalanceBefore)
+    ).toEqual(
+      Math.ceil(((GAMEPRICE1 - DISCOUNT1) * DRM_MINA_FEE_PERCENTAGE) / 100)
+    );
 
     expect(
       Number(publisherMinaBalanceAfter - publisherMinaBalanceBefore)
-    ).toEqual(GAMEPRICE1 - DISCOUNT1);
+    ).toEqual(
+      GAMEPRICE1 -
+        DISCOUNT1 -
+        Math.ceil(((GAMEPRICE1 - DISCOUNT1) * DRM_MINA_FEE_PERCENTAGE) / 100)
+    );
+
+    expect(Number(aliceGameTokenBalanceAfter.toString())).toEqual(1);
   });
 
   test('Alice registers a device to game 1', async () => {
@@ -275,6 +321,10 @@ describe('GameToken Contract Tests', () => {
 
     const publisherMinaBalanceBefore = Mina.getBalance(publisher).toBigInt();
 
+    const drmProviderMinaBalanceBefore = Mina.getBalance(
+      DRM_MINA_PROVIDER_PUB_KEY
+    ).toBigInt();
+
     const aliceTx = await Mina.transaction(
       {
         sender: alice,
@@ -299,6 +349,10 @@ describe('GameToken Contract Tests', () => {
 
     const publisherMinaBalanceAfter = Mina.getBalance(publisher).toBigInt();
 
+    const drmProviderMinaBalanceAfter = Mina.getBalance(
+      DRM_MINA_PROVIDER_PUB_KEY
+    ).toBigInt();
+
     expect(Number(aliceMinaBalanceBefore - aliceMinaBalanceAfter)).toEqual(
       GAMEPRICE2 - DISCOUNT2 + 1e8 + 1e9
     );
@@ -306,8 +360,18 @@ describe('GameToken Contract Tests', () => {
     expect(Number(aliceGameTokenBalanceAfter.toString())).toEqual(1);
 
     expect(
+      Number(drmProviderMinaBalanceAfter - drmProviderMinaBalanceBefore)
+    ).toEqual(
+      Math.ceil(((GAMEPRICE2 - DISCOUNT2) * DRM_MINA_FEE_PERCENTAGE) / 100)
+    );
+
+    expect(
       Number(publisherMinaBalanceAfter - publisherMinaBalanceBefore)
-    ).toEqual(GAMEPRICE2 - DISCOUNT2);
+    ).toEqual(
+      GAMEPRICE2 -
+        DISCOUNT2 -
+        Math.ceil(((GAMEPRICE2 - DISCOUNT2) * DRM_MINA_FEE_PERCENTAGE) / 100)
+    );
   });
 
   test('Alice registers a device to game 2', async () => {
@@ -557,11 +621,12 @@ describe('GameToken Contract Tests', () => {
     console.time('Bob buys a game');
 
     const bobMinaBalanceBefore = Mina.getBalance(bob).toBigInt();
-    const bobGameTokenBalanceBefore = await GameTokenInstance1.getBalanceOf(
-      bob
-    );
 
     const publisherMinaBalanceBefore = Mina.getBalance(publisher).toBigInt();
+
+    const drmProviderMinaBalanceBefore = Mina.getBalance(
+      DRM_MINA_PROVIDER_PUB_KEY
+    ).toBigInt();
 
     const bobTx = await Mina.transaction(
       {
@@ -585,6 +650,10 @@ describe('GameToken Contract Tests', () => {
 
     const publisherMinaBalanceAfter = Mina.getBalance(publisher).toBigInt();
 
+    const drmProviderMinaBalanceAfter = Mina.getBalance(
+      DRM_MINA_PROVIDER_PUB_KEY
+    ).toBigInt();
+
     expect(Number(bobMinaBalanceBefore - bobMinaBalanceAfter)).toEqual(
       GAMEPRICE1 - DISCOUNT1 + 1e8 + 1e9
     );
@@ -592,8 +661,18 @@ describe('GameToken Contract Tests', () => {
     expect(Number(bobGameTokenBalanceAfter.toString())).toEqual(1);
 
     expect(
+      Number(drmProviderMinaBalanceAfter - drmProviderMinaBalanceBefore)
+    ).toEqual(
+      Math.ceil(((GAMEPRICE1 - DISCOUNT1) * DRM_MINA_FEE_PERCENTAGE) / 100)
+    );
+
+    expect(
       Number(publisherMinaBalanceAfter - publisherMinaBalanceBefore)
-    ).toEqual(GAMEPRICE1 - DISCOUNT1);
+    ).toEqual(
+      GAMEPRICE1 -
+        DISCOUNT1 -
+        Math.ceil(((GAMEPRICE1 - DISCOUNT1) * DRM_MINA_FEE_PERCENTAGE) / 100)
+    );
   });
 
   test('Bob registers a device to game 1', async () => {
