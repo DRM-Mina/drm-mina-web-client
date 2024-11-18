@@ -8,10 +8,18 @@ import MacOS from "./macos";
 import Unity from "./unity";
 import { getSignedFileDownloadUrl } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
+import { useWalletStore } from "@/lib/stores/walletStore";
 
 export default function Downloads() {
   const { toast } = useToast();
-  const handleGameDownload = async (filename: string) => {
+  const walletStore = useWalletStore();
+  const handleDownload = async (filename: string) => {
+    if (!walletStore.isAuthenticated) {
+      return toast({
+        title: "Please connect your wallet",
+        description: "You need to connect your wallet to download",
+      });
+    }
     try {
       const url = await getSignedFileDownloadUrl(filename);
 
@@ -63,7 +71,7 @@ export default function Downloads() {
                   <Button
                     className="items-left row-span-1 mt-2 justify-start pl-1"
                     onClick={() =>
-                      handleGameDownload("DRM Mina Desktop Client.exe")
+                      handleDownload("DRM Mina Desktop Client.exe")
                     }
                   >
                     <Windows /> &nbsp; Download{" "}
@@ -74,7 +82,7 @@ export default function Downloads() {
                   <Button
                     className="items-left row-span-1 mt-2 justify-start pl-1"
                     onClick={() =>
-                      handleGameDownload("DRM Mina Desktop Client.AppImage")
+                      handleDownload("DRM Mina Desktop Client.AppImage")
                     }
                   >
                     <Linux /> &nbsp; Download{" "}
@@ -86,7 +94,7 @@ export default function Downloads() {
                   <Button
                     className="items-left row-span-1 mt-2 justify-start pl-1"
                     onClick={() =>
-                      handleGameDownload("DRM Mina Desktop Client.dmg")
+                      handleDownload("DRM Mina Desktop Client.dmg")
                     }
                   >
                     <MacOS /> &nbsp; Download{" "}
@@ -105,9 +113,7 @@ export default function Downloads() {
                   <p className="flex">Unity Package</p>
                   <Button
                     className="items-left row-span-1 mt-2 justify-start pl-1"
-                    onClick={() =>
-                      handleGameDownload("DRM Mina.unitypackage.zip")
-                    }
+                    onClick={() => handleDownload("DRM Mina.unitypackage.zip")}
                   >
                     <Unity /> &nbsp; Download{" "}
                   </Button>

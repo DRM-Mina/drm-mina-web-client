@@ -23,6 +23,7 @@ import {
 import CommentSection from "./commentSection";
 import RatingDisplay from "./ratingDisplay";
 import { getSignedGameDownloadUrl } from "@/lib/api";
+import { useWalletStore } from "@/lib/stores/walletStore";
 
 const ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -43,6 +44,7 @@ function Detail() {
   // const [device, setDevice] = useState<string | null>(null);
   const gameStore = useGamesStore();
   const deviceStore = useDeviceStore();
+  const walletStore = useWalletStore();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -87,6 +89,12 @@ function Detail() {
   const handleGameDownload = async (platfom: string) => {
     if (!game) {
       return;
+    }
+    if (!walletStore.isAuthenticated) {
+      return toast({
+        title: "Please connect your wallet",
+        description: "You need to connect your wallet to download",
+      });
     }
     try {
       const url = await getSignedGameDownloadUrl(game, platfom);
