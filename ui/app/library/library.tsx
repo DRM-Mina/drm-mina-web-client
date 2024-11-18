@@ -128,7 +128,7 @@ export default function DynamicLibrary() {
           </h3>
         </div>
       )}
-      {userStore.library.length && (
+      {userStore.library.length > 0 && (
         <div className=" flex w-full flex-col items-center justify-center gap-6">
           <h3 className="mb-2 text-lg font-medium tracking-tight">
             Owned Games
