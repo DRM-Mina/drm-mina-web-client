@@ -35,7 +35,7 @@ let nonce = Number(account!.nonce.toBigint());
 console.log(publisherPubKey.toBase58());
 
 const GAMEPRICE = [10_000_000_000, 20_000_000_000, 15_000_000_000];
-const DISCOUNT = [2_000_000_000, 10_000_000_000, 5_000_000_000];
+const DISCOUNT = [2_000_000_000, 0, 5_000_000_000];
 const TIMEOUTINTERVAL = 10000;
 const MAXDEVICEALLOWED = 4;
 
