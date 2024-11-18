@@ -11,6 +11,7 @@ interface UserState {
   userMinaBalance: number;
   wishlist: number[];
   library: number[];
+  isLibraryFetched: boolean;
   libraryTrigger: boolean;
   gameId: number;
   slotNames: string[];
@@ -29,6 +30,7 @@ export const useUserStore = create<UserState, [["zustand/immer", never]]>(
     userMinaBalance: 0,
     wishlist: [],
     library: [],
+    isLibraryFetched: false,
     libraryTrigger: false,
     gameId: 0,
     slotNames: [],
@@ -52,6 +54,7 @@ export const useUserStore = create<UserState, [["zustand/immer", never]]>(
     setLibrary(library) {
       set((state) => {
         state.library = library;
+        state.isLibraryFetched = true;
       });
     },
     triggerLibrary() {
