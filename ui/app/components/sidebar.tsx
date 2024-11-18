@@ -4,7 +4,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { ModeToggle } from "@/components/mode-toggle";
-import { Bookmark, Store, Gamepad2, Shapes, Bell } from "lucide-react";
+import {
+  Bookmark,
+  Store,
+  Gamepad2,
+  Shapes,
+  Bell,
+  HardDriveDownload,
+} from "lucide-react";
 import Web3wallet from "./web3wallet/web3wallet";
 import Link from "next/link";
 import {
@@ -102,6 +109,14 @@ export function Sidebar({ className }: SidebarProps) {
             >
               <Bookmark className="mr-2 h-4 w-4" />
               Wishlist
+            </Button>
+            <Button
+              variant={currentPath == "/wishlist" ? "secondary" : "ghost"}
+              className="w-full justify-start"
+              onClick={() => handleNavigate("/downloads")}
+            >
+              <HardDriveDownload className="mr-2 h-4 w-4" />
+              Downloads
             </Button>
             <Web3wallet />
           </div>
