@@ -66,7 +66,7 @@ export default function Downloads() {
                   Download the latest version of the DRM Mina Desktop Client
                 </p>
                 <Separator className=" border-1" />
-                <div className=" flex flex-row justify-between py-2">
+                <div className=" flex flex-row justify-between py-2 items-center">
                   <p className="flex">Windows Client</p>
                   <Button
                     className="items-left row-span-1 mt-2 justify-start pl-1"
@@ -77,7 +77,7 @@ export default function Downloads() {
                     <Windows /> &nbsp; Download{" "}
                   </Button>
                 </div>
-                <div className=" flex flex-row justify-between py-2">
+                <div className=" flex flex-row justify-between py-2 items-center">
                   <p className="flex">Linux Client</p>
                   <Button
                     className="items-left row-span-1 mt-2 justify-start pl-1"
