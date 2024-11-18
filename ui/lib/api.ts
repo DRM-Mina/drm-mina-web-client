@@ -1,276 +1,355 @@
 const ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
 export async function fetchGameData() {
-    const headers = { "Content-Type": "application/json" };
-    const res = await fetch(ENDPOINT + "game-data", { headers, method: "GET" });
-    const json = await res.json();
-    if (json.errors) {
-        console.error(json.errors);
-        throw new Error("Failed to fetch API");
-    }
-    return json;
+  const headers = { "Content-Type": "application/json" };
+  const res = await fetch(ENDPOINT + "game-data", { headers, method: "GET" });
+  const json = await res.json();
+  if (json.errors) {
+    console.error(json.errors);
+    throw new Error("Failed to fetch API");
+  }
+  return json;
 }
 
 export async function requestNonce(publicKey: string) {
-    const res = await fetch(`${ENDPOINT}auth/challenge/${publicKey}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-    });
-    if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to request nonce");
-    }
-    const data = await res.json();
-    return data.nonce;
+  const res = await fetch(`${ENDPOINT}auth/challenge/${publicKey}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Failed to request nonce");
+  }
+  const data = await res.json();
+  return data.nonce;
 }
 
 export async function verifySignature(signature: SignedData) {
-    const res = await fetch(`${ENDPOINT}auth/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signature: signature }),
-    });
-    if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to verify signature");
-    }
-    const data = await res.json();
-    localStorage.setItem("drmJwtToken", data.token);
-    return data.token;
+  const res = await fetch(`${ENDPOINT}auth/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ signature: signature }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Failed to verify signature");
+  }
+  const data = await res.json();
+  localStorage.setItem("drmJwtToken", data.token);
+  return data.token;
 }
 
 export async function authenticateUser(publicKey: string) {
-    try {
-        const nonce = await requestNonce(publicKey);
+  try {
+    const nonce = await requestNonce(publicKey);
 
-        const signature = await window.mina?.signMessage({
-            message: nonce,
-        });
+    const signature = await window.mina?.signMessage({
+      message: nonce,
+    });
 
-        if (!signature) {
-            throw new Error("Failed to sign nonce");
-        }
-
-        const token = await verifySignature(signature);
-
-        console.log("User authenticated successfully");
-        return token;
-    } catch (error) {
-        console.error("Authentication error:", error);
-        throw error;
+    if (!signature) {
+      throw new Error("Failed to sign nonce");
     }
+
+    const token = await verifySignature(signature);
+
+    console.log("User authenticated successfully");
+    return token;
+  } catch (error) {
+    console.error("Authentication error:", error);
+    throw error;
+  }
 }
 
 function getAuthHeaders() {
-    const token = localStorage.getItem("drmJwtToken");
-    console.log("Token:", token);
-    if (!token) {
-        throw new Error("User is not authenticated");
-    }
-    return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-    };
+  const token = localStorage.getItem("drmJwtToken");
+  console.log("Token:", token);
+  if (!token) {
+    throw new Error("User is not authenticated");
+  }
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
 }
 
-export async function toggleGameWishlist(publicKey: string, gameId: number): Promise<boolean> {
-    const headers = getAuthHeaders();
+export async function toggleGameWishlist(
+  publicKey: string,
+  gameId: number
+): Promise<boolean> {
+  const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + "wishlist/", {
-        headers,
-        method: "POST",
-        body: JSON.stringify({ publicKey, gameId }),
-    });
+  const res = await fetch(ENDPOINT + "wishlist/", {
+    headers,
+    method: "POST",
+    body: JSON.stringify({ publicKey, gameId }),
+  });
 
-    const json = await res.json();
-    const status = res.status;
+  const json = await res.json();
+  const status = res.status;
 
-    if (json.errors) {
-        console.error(json.errors);
-        throw new Error("Failed to add wishlist API");
-    }
+  if (json.errors) {
+    console.error(json.errors);
+    throw new Error("Failed to add wishlist API");
+  }
 
-    if (status == 200) {
-        return true;
-    } else {
-        return false;
-    }
+  if (status == 200) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 export async function fetchWishlist(publicKey: string) {
-    const headers = getAuthHeaders();
+  const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + "wishlist/" + publicKey, {
-        headers,
-        method: "GET",
-    });
-    const json = await res.json();
-    if (json.errors) {
-        console.error(json.errors);
-        throw new Error("Failed to fetch wishlist API");
-    }
-    return json;
+  const res = await fetch(ENDPOINT + "wishlist/" + publicKey, {
+    headers,
+    method: "GET",
+  });
+  const json = await res.json();
+  if (json.errors) {
+    console.error(json.errors);
+    throw new Error("Failed to fetch wishlist API");
+  }
+  return json;
 }
 
-export async function fetchSlotNames(publicKey: string, gameId: number): Promise<string[]> {
-    const headers = getAuthHeaders();
+export async function fetchSlotNames(
+  publicKey: string,
+  gameId: number
+): Promise<string[]> {
+  const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + "slot-names/", {
-        headers,
-        method: "POST",
-        body: JSON.stringify({ publicKey, gameId }),
-    });
-    const json = await res.json();
-    if (json.errors) {
-        console.error(json.errors);
-        throw new Error("Failed to fetch slot names API");
-    }
-    return json;
+  const res = await fetch(ENDPOINT + "slot-names/", {
+    headers,
+    method: "POST",
+    body: JSON.stringify({ publicKey, gameId }),
+  });
+  const json = await res.json();
+  if (json.errors) {
+    console.error(json.errors);
+    throw new Error("Failed to fetch slot names API");
+  }
+  return json;
 }
 
 export async function postSlotNames(
-    publicKey: string,
-    gameId: number,
-    slotNames: string[]
+  publicKey: string,
+  gameId: number,
+  slotNames: string[]
 ): Promise<boolean> {
-    const headers = getAuthHeaders();
+  const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + "slot-names/", {
-        headers,
-        method: "POST",
-        body: JSON.stringify({ publicKey, gameId, slotNames }),
-    });
+  const res = await fetch(ENDPOINT + "slot-names/", {
+    headers,
+    method: "POST",
+    body: JSON.stringify({ publicKey, gameId, slotNames }),
+  });
 
-    const json = await res.json();
-    const status = res.status;
+  const json = await res.json();
+  const status = res.status;
 
-    if (json.errors) {
-        throw new Error("Failed to post slot names API");
-    }
+  if (json.errors) {
+    throw new Error("Failed to post slot names API");
+  }
 
-    if (status == 200) {
-        return true;
-    } else {
-        return false;
-    }
+  if (status == 200) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 export async function postGameData(signedMessage: SignedData) {
-    const headers = getAuthHeaders();
+  const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + "change-game-data", {
-        headers,
-        method: "POST",
-        body: JSON.stringify({ signature: signedMessage }),
-    });
+  const res = await fetch(ENDPOINT + "change-game-data", {
+    headers,
+    method: "POST",
+    body: JSON.stringify({ signature: signedMessage }),
+  });
 
-    const json = await res.json();
-    const status = res.status;
+  const json = await res.json();
+  const status = res.status;
 
-    if (json.errors) {
-        throw new Error("Failed to post game data API");
-    }
+  if (json.errors) {
+    throw new Error("Failed to post game data API");
+  }
 
-    if (status == 200) {
-        return true;
-    } else {
-        return false;
-    }
+  if (status == 200) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 export async function fetchComments(
-    gameId: number,
-    page: number = 1,
-    limit: number = 10
+  gameId: number,
+  page: number = 1,
+  limit: number = 10
 ): Promise<any> {
-    const headers = { "Content-Type": "application/json" };
-    const res = await fetch(`${ENDPOINT}comments/${gameId}?page=${page}&limit=${limit}`, {
-        headers,
-        method: "GET",
-    });
-    if (!res.ok) {
-        const errorResponse = await res.json();
-        console.error(errorResponse.message);
-        throw new Error(`Failed to fetch comments: ${errorResponse.message}`);
+  const headers = { "Content-Type": "application/json" };
+  const res = await fetch(
+    `${ENDPOINT}comments/${gameId}?page=${page}&limit=${limit}`,
+    {
+      headers,
+      method: "GET",
     }
+  );
+  if (!res.ok) {
+    const errorResponse = await res.json();
+    console.error(errorResponse.message);
+    throw new Error(`Failed to fetch comments: ${errorResponse.message}`);
+  }
 
-    const json = await res.json();
-    return json;
+  const json = await res.json();
+  return json;
 }
 
 export async function postComment(
-    gameId: number,
-    content: string,
-    rating: number
+  gameId: number,
+  content: string,
+  rating: number
 ): Promise<boolean> {
-    const headers = getAuthHeaders();
+  const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + "comments", {
-        headers,
-        method: "POST",
-        body: JSON.stringify({ content, rating, gameId }),
-    });
+  const res = await fetch(ENDPOINT + "comments", {
+    headers,
+    method: "POST",
+    body: JSON.stringify({ content, rating, gameId }),
+  });
 
-    if (!res.ok) {
-        const errorResponse = await res.json();
-        console.error(errorResponse.message);
-        throw new Error(`Failed to post comment: ${errorResponse.message}`);
-    }
+  if (!res.ok) {
+    const errorResponse = await res.json();
+    console.error(errorResponse.message);
+    throw new Error(`Failed to post comment: ${errorResponse.message}`);
+  }
 
-    return true;
+  return true;
 }
 
 export async function editComment(
-    commentId: string,
-    content: string,
-    rating: number
+  commentId: string,
+  content: string,
+  rating: number
 ): Promise<boolean> {
-    const headers = getAuthHeaders();
+  const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + `comments/${commentId}`, {
-        headers,
-        method: "PUT",
-        body: JSON.stringify({ content, rating }),
-    });
+  const res = await fetch(ENDPOINT + `comments/${commentId}`, {
+    headers,
+    method: "PUT",
+    body: JSON.stringify({ content, rating }),
+  });
 
-    if (!res.ok) {
-        const errorResponse = await res.json();
-        console.error(errorResponse.message);
-        throw new Error(`Failed to edit comment: ${errorResponse.message}`);
-    }
+  if (!res.ok) {
+    const errorResponse = await res.json();
+    console.error(errorResponse.message);
+    throw new Error(`Failed to edit comment: ${errorResponse.message}`);
+  }
 
-    return true;
+  return true;
 }
 
 export async function deleteComment(commentId: string): Promise<boolean> {
-    const headers = getAuthHeaders();
+  const headers = getAuthHeaders();
 
-    const res = await fetch(ENDPOINT + `comments/${commentId}`, {
-        headers,
-        method: "DELETE",
-    });
+  const res = await fetch(ENDPOINT + `comments/${commentId}`, {
+    headers,
+    method: "DELETE",
+  });
 
-    if (!res.ok) {
-        const errorResponse = await res.json();
-        console.error(errorResponse.message);
-        throw new Error(`Failed to delete comment: ${errorResponse.message}`);
-    }
+  if (!res.ok) {
+    const errorResponse = await res.json();
+    console.error(errorResponse.message);
+    throw new Error(`Failed to delete comment: ${errorResponse.message}`);
+  }
 
-    return true;
+  return true;
 }
 
 export async function fetchGameRating(gameId: number): Promise<number> {
-    const headers = { "Content-Type": "application/json" };
-    const res = await fetch(`${ENDPOINT}rating/${gameId}`, {
-        headers,
-        method: "GET",
-    });
-    if (!res.ok) {
-        const errorResponse = await res.json();
-        console.error(errorResponse.message);
-        throw new Error(`Failed to fetch game rating: ${errorResponse.message}`);
-    }
+  const headers = { "Content-Type": "application/json" };
+  const res = await fetch(`${ENDPOINT}rating/${gameId}`, {
+    headers,
+    method: "GET",
+  });
+  if (!res.ok) {
+    const errorResponse = await res.json();
+    console.error(errorResponse.message);
+    throw new Error(`Failed to fetch game rating: ${errorResponse.message}`);
+  }
 
-    const json = await res.json();
-    return json.rating;
+  const json = await res.json();
+  return json.rating;
+}
+
+export async function getSignedGameDownloadUrl(
+  game: Game,
+  platform: string
+): Promise<string> {
+  const headers = getAuthHeaders();
+
+  let fileName;
+  if (platform === "windows") {
+    if (game?.downloadable) {
+      fileName = game?.imageFolder + ".exe";
+    } else {
+      fileName = "Game Demo.exe";
+    }
+  }
+  if (platform === "macos") {
+    if (game?.downloadable) {
+      fileName = game?.imageFolder + ".zip";
+    } else {
+      fileName = "Game Demo.zip";
+    }
+  }
+  if (platform === "linux") {
+    if (game?.downloadable) {
+      fileName = game?.imageFolder + ".tar.gz";
+    } else {
+      fileName = "Game Demo.tar.gz";
+    }
+  }
+
+  const res = await fetch(ENDPOINT + "get-signed-url", {
+    headers,
+    method: "POST",
+    body: JSON.stringify({ fileName }),
+  });
+
+  if (!res.ok) {
+    const errorResponse = await res.json();
+    console.error(errorResponse.message);
+    throw new Error(
+      `Failed to get signed download URL: ${errorResponse.message}`
+    );
+  }
+
+  const json = await res.json();
+  return json.url;
+}
+
+export async function getSignedFileDownloadUrl(
+  fileName: string
+): Promise<string> {
+  const headers = getAuthHeaders();
+
+  const res = await fetch(ENDPOINT + "get-signed-url", {
+    headers,
+    method: "POST",
+    body: JSON.stringify({ fileName }),
+  });
+
+  if (!res.ok) {
+    const errorResponse = await res.json();
+    console.error(errorResponse.message);
+    throw new Error(
+      `Failed to get signed download URL: ${errorResponse.message}`
+    );
+  }
+
+  const json = await res.json();
+  return json.url;
 }
