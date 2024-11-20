@@ -14,12 +14,19 @@ export default function Web3wallet() {
 
   const handleConnectWallet = async () => {
     const res = await walletStore.connect();
-    console.log(res);
-    if (!res) {
+    if (res === 0) {
+      toast({
+        title: "Auro wallet not found",
+        description: "Please install Auro wallet",
+      });
+      return;
+    }
+    if (res === 2) {
       toast({
         title: "Error",
         description: "Failed to connect wallet",
       });
+      return;
     }
   };
 
