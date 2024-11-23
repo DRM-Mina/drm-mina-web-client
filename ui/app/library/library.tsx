@@ -16,6 +16,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useUserStore } from "@/lib/stores/userStore";
+import Windows from "../downloads/windows";
+import Linux from "../downloads/linux";
+import MacOS from "../downloads/macos";
 
 const ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -188,7 +191,7 @@ export default function DynamicLibrary() {
                               handleGameDownload(game, "windows");
                             }}
                           >
-                            <Download size={24} className=" mr-2" />
+                            <Windows className=" mr-2" />
                             Windows Downloader
                           </Button>
                           <Button
@@ -198,7 +201,7 @@ export default function DynamicLibrary() {
                               handleGameDownload(game, "linux");
                             }}
                           >
-                            <Download size={24} className=" mr-2" />
+                            <Linux className=" mr-2" />
                             Linux Downloader
                           </Button>
                           <Button
@@ -208,7 +211,7 @@ export default function DynamicLibrary() {
                               handleGameDownload(game, "macos");
                             }}
                           >
-                            <Download size={24} className=" mr-2" />
+                            <MacOS className=" mr-2" />
                             MacOS Downloader
                           </Button>
                         </div>
