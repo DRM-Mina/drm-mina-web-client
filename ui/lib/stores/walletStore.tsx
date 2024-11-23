@@ -60,7 +60,7 @@ export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
 
       try {
         const wallet = await window.mina.requestAccounts();
-        await window.mina?.mina_switchChain({ networkID: "mina:testnet" });
+        await window.mina?.switchChain({ networkID: "mina:testnet" });
         // const network = await window.mina.requestNetwork();
         if (wallet[0]) {
           set((state) => {
@@ -78,6 +78,7 @@ export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
           return 1;
         }
       } catch (e) {
+        console.error(e);
         return 2;
       }
 
