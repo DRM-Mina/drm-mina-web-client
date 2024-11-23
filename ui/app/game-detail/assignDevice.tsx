@@ -149,10 +149,11 @@ export default function AssignDevice({ game }: { game: Game }) {
       {!canAssign &&
         game &&
         userStore.library.includes(game.gameId) &&
+        walletStore.isAuthenticated &&
         deviceStore.isDeviceSet && (
           <div className="grid col-span-3 h-full place-items-center">
             <div className=" flex gap-1 flex-col justify-center items-center">
-              <div>Waiting Compilation</div>
+              <div>Loading</div>
               <div className="ping-pong"></div>
             </div>
           </div>

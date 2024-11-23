@@ -11,6 +11,7 @@ import {
   Shapes,
   Bell,
   HardDriveDownload,
+  Dot,
 } from "lucide-react";
 import Web3wallet from "./web3wallet/web3wallet";
 import Link from "next/link";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useWorkerStore } from "@/lib/stores/workerStore";
 import { Progress } from "@/components/ui/progress";
+import { useDeviceStore } from "@/lib/stores/deviceStore";
 // import dynamic from "next/dynamic";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
@@ -33,6 +35,7 @@ export function Sidebar({ className }: SidebarProps) {
   const [currentPath, setCurrentPath] = useState<string>("/");
   const router = useRouter();
   const workerStore = useWorkerStore();
+  const deviceStore = useDeviceStore();
 
   const handleNavigate = (path: string) => {
     setCurrentPath(path);
@@ -122,17 +125,29 @@ export function Sidebar({ className }: SidebarProps) {
           </div>
         </div>
       </div>
-      <div className="absolute bottom-4 flex w-full justify-between self-end px-6">
+      <div className="absolute bottom-4 flex w-full justify-center items-center self-end px-4 gap-2">
         <ModeToggle />
-        {!workerStore.drmCompiled && (
-          <div className=" flex flex-col w-full px-2 gap-1 text-xs items-center justify-center">
-            <div className=" items-center flex flex-row gap-1">
-              <div className="flex">Compiling</div>
-              <div className="flex w-7 h-2 mt-3 loader"></div>
+        <div className=" w-full max-w-44 flex flex-col gap-1 justify-center items-center">
+          {!workerStore.drmCompiled && (
+            <div className=" flex flex-col w-full px-2 gap-1 text-xs items-center justify-center">
+              <div className=" items-center flex flex-row gap-1">
+                <div className="flex">Compiling</div>
+                <div className="flex w-7 h-2 mt-3 loader"></div>
+              </div>
+              <Progress className=" h-2" value={workerStore.progress} />
             </div>
-            <Progress className=" h-2" value={workerStore.progress} />
+          )}
+
+          <div
+            className={
+              deviceStore.isDeviceSet
+                ? "text-green-700"
+                : " text-red-700" + " text-xs"
+            }
+          >
+            Device info {deviceStore.isDeviceSet ? "set" : "not set"}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
