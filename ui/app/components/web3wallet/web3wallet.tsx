@@ -37,16 +37,18 @@ export default function Web3wallet() {
       walletStore.isConnected
     ) {
       (async () => {
-        // @ts-ignore
-        const token = await authenticateUser(walletStore.userPublicKey);
-        if (!token) {
+        try {
+          // @ts-ignore
+          const token = await authenticateUser(walletStore.userPublicKey);
+          if (token) {
+            walletStore.setIsAuthenticated(true);
+          }
+        } catch (e) {
           toast({
             title: "Error",
             description: "Failed to authenticate user",
           });
           walletStore.disconnect();
-        } else {
-          walletStore.setIsAuthenticated(true);
         }
       })();
     }

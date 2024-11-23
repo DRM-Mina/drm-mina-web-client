@@ -94,7 +94,7 @@ declare global {
         };
       }>;
 
-      switchChain(params: {
+      mina_switchChain(params: {
         networkID: string;
       }): Promise<ChainInfoArgs | ProviderError>;
 
