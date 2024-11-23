@@ -140,9 +140,8 @@ export function Sidebar({ className }: SidebarProps) {
 
           <div
             className={
-              deviceStore.isDeviceSet
-                ? "text-green-700"
-                : " text-red-700" + " text-xs"
+              (deviceStore.isDeviceSet ? "text-green-700" : " text-red-700") +
+              " text-xs"
             }
           >
             Device info {deviceStore.isDeviceSet ? "set" : "not set"}
