@@ -24,6 +24,9 @@ import CommentSection from "./commentSection";
 import RatingDisplay from "./ratingDisplay";
 import { getSignedGameDownloadUrl } from "@/lib/api";
 import { useWalletStore } from "@/lib/stores/walletStore";
+import Linux from "../downloads/linux";
+import MacOS from "../downloads/macos";
+import Windows from "../downloads/windows";
 
 const ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -249,7 +252,7 @@ function Detail() {
                         handleGameDownload("windows");
                       }}
                     >
-                      <Download size={24} className=" mr-2" />
+                      <Windows className=" mr-2" />
                       Windows Downloader
                     </Button>
                     <Button
@@ -258,7 +261,7 @@ function Detail() {
                         handleGameDownload("linux");
                       }}
                     >
-                      <Download size={24} className=" mr-2" />
+                      <Linux className=" mr-2" />
                       Linux Downloader
                     </Button>
                     <Button
@@ -267,7 +270,7 @@ function Detail() {
                         handleGameDownload("macos");
                       }}
                     >
-                      <Download size={24} className=" mr-2" />
+                      <MacOS className=" mr-2" />
                       MacOS Downloader
                     </Button>
                   </div>
