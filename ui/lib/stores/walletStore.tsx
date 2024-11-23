@@ -39,7 +39,7 @@ export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
         network,
       }),
     observeWalletChange() {
-      if (typeof window.mina === "undefined") {
+      if (typeof window === "undefined" || typeof window.mina === "undefined") {
         return;
       }
 

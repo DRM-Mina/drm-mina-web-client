@@ -105,6 +105,7 @@ export default function GameTokenDeploy() {
     } catch (e) {
       handleToast("Failed to deploy game token");
       console.error(e);
+      setIsProcessing(false);
     }
   };
 

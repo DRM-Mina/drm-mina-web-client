@@ -200,8 +200,7 @@ export const useWorkerStore = create<
         throw new Error("Worker not ready");
       }
 
-      const json = await this.worker.buyGame({ recipient, contractPublicKey });
-      return json;
+      return await this.worker.buyGame({ recipient, contractPublicKey });
     },
 
     async getMaxDeviceAllowed(contractAddress: string) {
@@ -235,13 +234,12 @@ export const useWorkerStore = create<
         throw new Error("Worker not ready");
       }
 
-      const json = await this.worker.assignDeviceToSlot({
+      return await this.worker.assignDeviceToSlot({
         userAddress,
         rawIdentifiers,
         deviceIndex,
         contractPublicKey,
       });
-      return json;
     },
 
     async deployGameToken(
@@ -303,7 +301,7 @@ export const useWorkerStore = create<
         throw new Error("Worker not ready");
       }
 
-      const json = await this.worker.setGameTokenFields({
+      return await this.worker.setGameTokenFields({
         contractAddress,
         publisher,
         price,
@@ -311,7 +309,6 @@ export const useWorkerStore = create<
         timeoutInterval,
         numberOfDevices,
       });
-      return json;
     },
   }))
 );

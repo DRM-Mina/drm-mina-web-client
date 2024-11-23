@@ -35,10 +35,9 @@ export default class WorkerClient {
   }
 
   async getGameTokenInstance({ contractAddress }: { contractAddress: string }) {
-    const result = await this._call("getGameTokenInstance", {
+    return await this._call("getGameTokenInstance", {
       contractAddress,
     });
-    return result;
   }
 
   fetchAccount({
@@ -56,10 +55,9 @@ export default class WorkerClient {
   }
 
   async getMinaBalance({ userAddress }: { userAddress: string }) {
-    const result = await this._call("getMinaBalance", {
+    return await this._call("getMinaBalance", {
       userAddress,
     });
-    return result;
   }
 
   async getTokenOwnership({
@@ -69,11 +67,10 @@ export default class WorkerClient {
     userAddress: string;
     contractPublicKey: string;
   }) {
-    const result = await this._call("getTokenOwnership", {
+    return await this._call("getTokenOwnership", {
       userAddress,
       contractPublicKey,
     });
-    return result;
   }
 
   async getPrice({
@@ -94,11 +91,10 @@ export default class WorkerClient {
     recipient: string;
     contractPublicKey: string;
   }) {
-    const result = await this._call("buyGame", {
+    return await this._call("buyGame", {
       recipient,
       contractPublicKey,
     });
-    return result;
   }
 
   async initAndAddDevice({
@@ -112,13 +108,12 @@ export default class WorkerClient {
     deviceIndex: number;
     contractPublicKey: string;
   }) {
-    const result = await this._call("initAndAddDevice", {
+    return await this._call("initAndAddDevice", {
       userAddress,
       rawIdentifiers,
       deviceIndex,
       contractPublicKey,
     });
-    return result;
   }
 
   async changeDevice({
@@ -132,13 +127,12 @@ export default class WorkerClient {
     deviceIndex: number;
     contractPublicKey: string;
   }) {
-    const result = await this._call("changeDevice", {
+    return await this._call("changeDevice", {
       userAddress,
       rawIdentifiers,
       deviceIndex,
       contractPublicKey,
     });
-    return result;
   }
 
   async settle({
@@ -148,18 +142,16 @@ export default class WorkerClient {
     userAddress: string;
     contractAddress: string;
   }) {
-    const result = await this._call("settle", {
+    return await this._call("settle", {
       contractAddress,
       userAddress,
     });
-    return result;
   }
 
   async getMaxDeviceAllowed({ contractAddress }: { contractAddress: string }) {
-    const result = await this._call("getMaxDeviceAllowed", {
+    return await this._call("getMaxDeviceAllowed", {
       contractAddress,
     });
-    return result;
   }
 
   async getDevices({
@@ -170,11 +162,10 @@ export default class WorkerClient {
     contractAddress: string;
   }) {
     console.log("worker call getDevices");
-    const result = await this._call("getDevices", {
+    return await this._call("getDevices", {
       userAddress,
       contractAddress,
     });
-    return result;
   }
 
   async assignDeviceToSlot({
@@ -188,13 +179,12 @@ export default class WorkerClient {
     deviceIndex: number;
     contractPublicKey: string;
   }) {
-    const result = await this._call("assignDeviceToSlot", {
+    return await this._call("assignDeviceToSlot", {
       userAddress,
       rawIdentifiers,
       deviceIndex,
       contractPublicKey,
     });
-    return result;
   }
 
   async deployGameToken({
@@ -212,7 +202,7 @@ export default class WorkerClient {
     timeoutInterval: number;
     numberOfDevices: number;
   }) {
-    const result = await this._call("deployGameToken", {
+    return await this._call("deployGameToken", {
       publisher,
       symbol,
       price,
@@ -220,7 +210,6 @@ export default class WorkerClient {
       timeoutInterval,
       numberOfDevices,
     });
-    return result;
   }
 
   fetchGameTokenFields({

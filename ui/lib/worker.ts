@@ -19,8 +19,6 @@ import {
 import { DeviceSession } from "drm-mina-contracts/build/src/lib/DeviceSessionProof";
 import { BundledDeviceSession } from "drm-mina-contracts/build/src/lib/BundledDeviceSessionProof";
 
-// type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
-
 const state = {
   status: "loading" as "loading" | "ready",
   deviceIdentifierProgram: null as typeof DeviceIdentifier | null,
@@ -46,7 +44,7 @@ const functions = {
     console.log("Devnet network instance configured.");
     Mina.setActiveInstance(Network);
   },
-  loadAndCompileGameTokenContract: async (args: {}): Promise<void> => {
+  loadAndCompileGameTokenContract: async (args: {}) => {
     if (!state.GameToken.contract) {
       const contract = (
         await import(`drm-mina-contracts/build/src/GameToken.js`)
@@ -58,32 +56,32 @@ const functions = {
     }
     await state.GameToken.contract.compile();
   },
-  compileDeviceIdentifier: async (args: {}): Promise<void> => {
+  compileDeviceIdentifier: async (args: {}) => {
     console.log("Compiling DeviceIdentifier");
     console.time("Compile DeviceIdentifier complete");
     state.deviceIdentifierProgram = DeviceIdentifier;
     await DeviceIdentifier.compile();
     console.timeEnd("Compile DeviceIdentifier complete");
   },
-  compileDeviceSession: async (args: {}): Promise<void> => {
+  compileDeviceSession: async (args: {}) => {
     console.log("Compiling DeviceSession");
     console.time("Compile DeviceSession complete");
     await DeviceSession.compile();
     console.timeEnd("Compile DeviceSession complete");
   },
-  compileBundledDeviceSession: async (args: {}): Promise<void> => {
+  compileBundledDeviceSession: async (args: {}) => {
     console.log("Compiling BundleDeviceSession");
     console.time("Compile BundleDeviceSession complete");
     await BundledDeviceSession.compile();
     console.timeEnd("Compile BundleDeviceSession complete");
   },
-  compileOffchainState: async (args: {}): Promise<void> => {
+  compileOffchainState: async (args: {}) => {
     console.log("Compiling DRM offchain state");
     console.time("Compile offchainState complete");
     await offchainState.compile();
     console.timeEnd("Compile offchainState complete");
   },
-  loadAndCompileDRMContract: async (args: {}): Promise<void> => {
+  loadAndCompileDRMContract: async (args: {}) => {
     if (!state.DRM.contract) {
       const contract = (await import(`drm-mina-contracts/build/src/DRM.js`))[
         "DRM"
@@ -102,7 +100,7 @@ const functions = {
     contractAddress,
   }: {
     contractAddress: string;
-  }): Promise<GameToken> => {
+  }) => {
     if (!state.GameToken.contract) {
       throw new Error("GameToken contract is not loaded");
     }
@@ -134,11 +132,7 @@ const functions = {
       tokenId: args.tokenId ? TokenId.fromBase58(args.tokenId) : undefined,
     });
   },
-  getMinaBalance: async ({
-    userAddress,
-  }: {
-    userAddress: string;
-  }): Promise<string> => {
+  getMinaBalance: async ({ userAddress }: { userAddress: string }) => {
     try {
       const publicKey = PublicKey.fromBase58(userAddress);
       await fetchAccount({
@@ -156,7 +150,7 @@ const functions = {
   }: {
     userAddress: string;
     contractPublicKey: string;
-  }): Promise<string> => {
+  }) => {
     try {
       const publicKey = PublicKey.fromBase58(userAddress);
       const tokenId = TokenId.derive(PublicKey.fromBase58(contractPublicKey));
@@ -170,11 +164,7 @@ const functions = {
       return "0";
     }
   },
-  getPrice: async ({
-    contractPublicKey,
-  }: {
-    contractPublicKey: string;
-  }): Promise<string> => {
+  getPrice: async ({ contractPublicKey }: { contractPublicKey: string }) => {
     const contractInstance = await functions.getGameTokenInstance({
       contractAddress: contractPublicKey,
     });
@@ -191,23 +181,28 @@ const functions = {
   }: {
     recipient: string;
     contractPublicKey: string;
-  }): Promise<string> => {
-    const contractInstance = await functions.getGameTokenInstance({
-      contractAddress: contractPublicKey,
-    });
-    const sender = PublicKey.fromBase58(recipient);
-    const transaction = await Mina.transaction(
-      {
-        sender: sender,
-        fee: 1e8,
-      },
-      async () => {
-        AccountUpdate.fundNewAccount(sender);
-        await contractInstance.mintGameToken(sender);
-      }
-    );
-    await transaction.prove();
-    return transaction.toJSON();
+  }) => {
+    try {
+      const contractInstance = await functions.getGameTokenInstance({
+        contractAddress: contractPublicKey,
+      });
+      const sender = PublicKey.fromBase58(recipient);
+      const transaction = await Mina.transaction(
+        {
+          sender: sender,
+          fee: 1e8,
+        },
+        async () => {
+          AccountUpdate.fundNewAccount(sender);
+          await contractInstance.mintGameToken(sender);
+        }
+      );
+      await transaction.prove();
+      return transaction.toJSON();
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   },
   initAndAddDevice: async ({
     userAddress,
@@ -427,44 +422,49 @@ const functions = {
     deviceIndex: number;
     contractPublicKey: string;
   }) => {
-    console.log("Getting devices for", userAddress, contractPublicKey);
-    console.time("Get DRM Instance");
-    const contractInstance = await functions.getDRMInstance({
-      contractAddress: contractPublicKey,
-    });
-    console.timeEnd("Get DRM Instance");
-
-    await fetchAccount({
-      publicKey: PublicKey.fromBase58(userAddress),
-    });
-
-    await fetchAccount({
-      publicKey: PublicKey.fromBase58(contractPublicKey),
-    });
-
-    console.log("Getting devices to assign");
-    const devices = await contractInstance.offchainState.fields.devices.get(
-      PublicKey.fromBase58(userAddress)
-    );
-
-    console.log("Devices", devices);
-
-    console.log("issome", devices.isSome.toBoolean());
-
-    if (!devices.isSome.toBoolean()) {
-      return await functions.initAndAddDevice({
-        userAddress,
-        rawIdentifiers,
-        deviceIndex,
-        contractPublicKey,
+    try {
+      console.log("Getting devices for", userAddress, contractPublicKey);
+      console.time("Get DRM Instance");
+      const contractInstance = await functions.getDRMInstance({
+        contractAddress: contractPublicKey,
       });
-    } else {
-      return await functions.changeDevice({
-        userAddress,
-        rawIdentifiers,
-        deviceIndex,
-        contractPublicKey,
+      console.timeEnd("Get DRM Instance");
+
+      await fetchAccount({
+        publicKey: PublicKey.fromBase58(userAddress),
       });
+
+      await fetchAccount({
+        publicKey: PublicKey.fromBase58(contractPublicKey),
+      });
+
+      console.log("Getting devices to assign");
+      const devices = await contractInstance.offchainState.fields.devices.get(
+        PublicKey.fromBase58(userAddress)
+      );
+
+      console.log("Devices", devices);
+
+      console.log("issome", devices.isSome.toBoolean());
+
+      if (!devices.isSome.toBoolean()) {
+        return await functions.initAndAddDevice({
+          userAddress,
+          rawIdentifiers,
+          deviceIndex,
+          contractPublicKey,
+        });
+      } else {
+        return await functions.changeDevice({
+          userAddress,
+          rawIdentifiers,
+          deviceIndex,
+          contractPublicKey,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      throw e;
     }
   },
   deployGameToken: async ({
@@ -482,50 +482,55 @@ const functions = {
     timeoutInterval: number;
     numberOfDevices: number;
   }) => {
-    const publisherPubKey = PublicKey.fromBase58(publisher);
+    try {
+      const publisherPubKey = PublicKey.fromBase58(publisher);
 
-    const GameTokenPk = PrivateKey.random();
-    const GameTokenAddr = GameTokenPk.toPublicKey();
-    const GameTokenInstance = new GameToken(GameTokenAddr);
+      const GameTokenPk = PrivateKey.random();
+      const GameTokenAddr = GameTokenPk.toPublicKey();
+      const GameTokenInstance = new GameToken(GameTokenAddr);
 
-    const DRMPk = PrivateKey.random();
-    const DRMAddr = DRMPk.toPublicKey();
-    const DRMInstance = new DRM(DRMAddr);
-    DRMInstance.offchainState.setContractInstance(DRMInstance);
+      const DRMPk = PrivateKey.random();
+      const DRMAddr = DRMPk.toPublicKey();
+      const DRMInstance = new DRM(DRMAddr);
+      DRMInstance.offchainState.setContractInstance(DRMInstance);
 
-    const transaction = await Mina.transaction(
-      {
-        sender: publisherPubKey,
-        fee: 1e8,
-      },
-      async () => {
-        AccountUpdate.fundNewAccount(publisherPubKey, 3);
-        await GameTokenInstance.deploy({
-          symbol,
-          src: "https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/GameToken.ts",
-        });
-        await GameTokenInstance.initialize(
-          publisherPubKey,
-          UInt64.from(price),
-          UInt64.from(discount),
-          UInt64.from(timeoutInterval),
-          UInt64.from(numberOfDevices),
-          Bool(false)
-        );
-        await DRMInstance.deploy();
-        await DRMInstance.initialize(GameTokenAddr);
-      }
-    );
+      const transaction = await Mina.transaction(
+        {
+          sender: publisherPubKey,
+          fee: 1e8,
+        },
+        async () => {
+          AccountUpdate.fundNewAccount(publisherPubKey, 3);
+          await GameTokenInstance.deploy({
+            symbol,
+            src: "https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/GameToken.ts",
+          });
+          await GameTokenInstance.initialize(
+            publisherPubKey,
+            UInt64.from(price),
+            UInt64.from(discount),
+            UInt64.from(timeoutInterval),
+            UInt64.from(numberOfDevices),
+            Bool(false)
+          );
+          await DRMInstance.deploy();
+          await DRMInstance.initialize(GameTokenAddr);
+        }
+      );
 
-    await transaction.prove();
-    transaction.sign([GameTokenPk, DRMPk]);
-    return JSON.stringify({
-      GameTokenAddr: GameTokenAddr.toBase58(),
-      GameTokenPk: GameTokenPk.toBase58(),
-      DRMAddr: DRMAddr.toBase58(),
-      DRMPk: DRMPk.toBase58(),
-      transaction: transaction.toJSON(),
-    });
+      await transaction.prove();
+      transaction.sign([GameTokenPk, DRMPk]);
+      return JSON.stringify({
+        GameTokenAddr: GameTokenAddr.toBase58(),
+        GameTokenPk: GameTokenPk.toBase58(),
+        DRMAddr: DRMAddr.toBase58(),
+        DRMPk: DRMPk.toBase58(),
+        transaction: transaction.toJSON(),
+      });
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   },
   fetchGameTokenFields: async ({
     contractAddress,

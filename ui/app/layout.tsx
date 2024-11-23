@@ -24,30 +24,52 @@ export default function RootLayout({
   const workerStore = useWorkerStore();
   const walletStore = useWalletStore();
   useObserveGames();
-  walletStore.observeWalletChange();
+
   const { toast } = useToast();
   const hasMounted = useHasMounted();
   const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
-    if (window.innerWidth <= 768) {
-      setIsMobile(true);
-    } else {
-      (async () => {
-        if (workerStore.isLoading || workerStore.isReady) {
-          return;
-        }
-        toast({
-          title: "Web workers compiling contracts",
-          description: "Web workers are compiling contracts, please wait",
-        });
-        await workerStore.startWorker();
-        toast({
-          title: "Web workers ready",
-          description: "Web workers are ready",
-        });
-      })();
-    }
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setIsMobile(true);
+      } else {
+        setIsMobile(false);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (
+        workerStore.isLoading ||
+        workerStore.isReady ||
+        !hasMounted ||
+        isMobile
+      ) {
+        return;
+      }
+      toast({
+        title: "Web workers compiling contracts",
+        description: "Web workers are compiling contracts, please wait",
+      });
+      await workerStore.startWorker();
+      toast({
+        title: "Web workers ready",
+        description: "Web workers are ready",
+      });
+    })();
   }, [hasMounted]);
+
+  useEffect(() => {
+    walletStore.observeWalletChange();
+  }, [walletStore.observeWalletChange]);
 
   useObserveUserLibraryRoutine();
 
