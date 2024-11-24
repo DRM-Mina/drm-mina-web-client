@@ -70,10 +70,9 @@ export class GameToken extends TokenContract {
 
     this.account.permissions.set({
       ...Permissions.default(),
-      editState: Permissions.proof(),
       send: Permissions.impossible(),
       setVerificationKey:
-        Permissions.VerificationKey.impossibleDuringCurrentVersion(),
+        Permissions.VerificationKey.proofDuringCurrentVersion(),
       setPermissions: Permissions.impossible(),
       access: Permissions.proof(),
     });
@@ -81,6 +80,7 @@ export class GameToken extends TokenContract {
 
   @method
   async updateVerificationKey(vk: VerificationKey) {
+    this.onlyPublisher();
     this.account.verificationKey.set(vk);
   }
 
@@ -100,8 +100,6 @@ export class GameToken extends TokenContract {
     this.discount.set(discount);
     this.timeoutInterval.set(timeoutInterval);
     this.maxDeviceAllowed.set(maxDeviceAllowed);
-
-    this.paused.set(Bool(false));
     this.paused.set(startPaused);
 
     const accountUpdate = AccountUpdate.createSigned(
@@ -109,8 +107,9 @@ export class GameToken extends TokenContract {
       this.deriveTokenId()
     );
     let permissions = Permissions.default();
-    // This is necessary in order to allow token holders to burn.
-    permissions.send = Permissions.none();
+    permissions.send = Permissions.impossible();
+    permissions.setVerificationKey =
+      Permissions.VerificationKey.proofDuringCurrentVersion();
     permissions.setPermissions = Permissions.impossible();
     accountUpdate.account.permissions.set(permissions);
   }
