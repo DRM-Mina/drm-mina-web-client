@@ -5,10 +5,7 @@ import {
   GameToken,
 } from '../GameToken.js';
 import { DRM, offchainState } from '../DRM.js';
-import {
-  DeviceIdentifier,
-  DeviceIdentifierProof,
-} from '../lib/DeviceIdentifierProof.js';
+import { DeviceIdentifier } from '../lib/DeviceIdentifierProof.js';
 import { DeviceSession } from '../lib/DeviceSessionProof.js';
 import { mockIdentifiers } from './mock.js';
 import { Identifiers } from '../lib/DeviceIdentifier.js';

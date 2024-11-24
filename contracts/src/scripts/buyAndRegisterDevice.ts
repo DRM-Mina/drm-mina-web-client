@@ -176,7 +176,7 @@ try {
     async () => {
       await DRMInstance.initAndAddDevice(
         AlicePubKey,
-        deviceIdentifier,
+        deviceIdentifier.proof,
         UInt64.from(1)
       );
     }
@@ -277,7 +277,7 @@ const registerDeviceTx2 = await Mina.transaction(
   async () => {
     await DRMInstance.changeDevice(
       AlicePubKey,
-      deviceIdentifier2,
+      deviceIdentifier2.proof,
       UInt64.from(4)
     );
   }
@@ -380,7 +380,7 @@ const sessionTx = await Mina.transaction(
     fee: 1e9,
   },
   async () => {
-    await DRMInstance.createSession(deviceSessionProof);
+    await DRMInstance.createSession(deviceSessionProof.proof);
   }
 );
 
