@@ -67,7 +67,7 @@ export const DeviceIdentifier = ZkProgram({
           A.and(Z).or(zero.and(nine)).assertTrue();
         }
 
-        return identifiers.hash();
+        return { publicOutput: identifiers.hash() };
       },
     },
   },

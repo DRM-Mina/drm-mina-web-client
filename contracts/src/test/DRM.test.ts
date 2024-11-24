@@ -5,7 +5,10 @@ import {
   GameToken,
 } from '../GameToken.js';
 import { DRM, offchainState } from '../DRM.js';
-import { DeviceIdentifier } from '../lib/DeviceIdentifierProof.js';
+import {
+  DeviceIdentifier,
+  DeviceIdentifierProof,
+} from '../lib/DeviceIdentifierProof.js';
 import { DeviceSession } from '../lib/DeviceSessionProof.js';
 import { mockIdentifiers } from './mock.js';
 import { Identifiers } from '../lib/DeviceIdentifier.js';
@@ -249,7 +252,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Alice registers a device to game 1', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
       AliceDeviceIdentifiers
     );
 
@@ -376,7 +379,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Alice registers a device to game 2', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
       AliceDeviceIdentifiers
     );
 
@@ -443,7 +446,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Alice registers another device to game 1', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier2 = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier2 } = await DeviceIdentifier.proofForDevice(
       AliceDeviceIdentifiers2
     );
 
@@ -494,7 +497,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Alice registers another device to game 2', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier2 = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier2 } = await DeviceIdentifier.proofForDevice(
       AliceDeviceIdentifiers2
     );
 
@@ -546,7 +549,7 @@ describe('GameToken Contract Tests', () => {
   test('Bob trying to register a device without buying a game 1', async () => {
     try {
       console.time('Device identifier proof create');
-      const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+      const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
         BobDeviceIdentifiers
       );
 
@@ -583,7 +586,7 @@ describe('GameToken Contract Tests', () => {
   test('Bob tries to register a device with other methods', async () => {
     try {
       console.time('Device identifier proof create');
-      const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+      const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
         BobDeviceIdentifiers
       );
 
@@ -677,7 +680,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Bob registers a device to game 1', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
       BobDeviceIdentifiers
     );
 
@@ -723,7 +726,7 @@ describe('GameToken Contract Tests', () => {
   test('Bob tries to register a device with other methods', async () => {
     try {
       console.time('Device identifier proof create');
-      const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+      const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
         BobDeviceIdentifiers
       );
 
@@ -767,7 +770,7 @@ describe('GameToken Contract Tests', () => {
 
     expect(aliceDeviceSession.value.equals(UInt64.from(1))).toBeTruthy();
 
-    const deviceSessionProof = await DeviceSession.proofForSession(
+    const { proof: deviceSessionProof } = await DeviceSession.proofForSession(
       {
         gameToken: GameTokenAddr1,
         currentSessionKey: UInt64.from(1),
@@ -801,7 +804,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Alice register device 3 in slot 1 in game 1', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
       AliceDeviceIdentifiers3
     );
 
@@ -871,7 +874,7 @@ describe('GameToken Contract Tests', () => {
 
       expect(aliceDeviceSession.value.equals(UInt64.from(0))).toBeTruthy();
 
-      const deviceSessionProof = await DeviceSession.proofForSession(
+      const { proof: deviceSessionProof } = await DeviceSession.proofForSession(
         {
           gameToken: GameTokenAddr1,
           currentSessionKey: UInt64.from(0),
@@ -911,7 +914,7 @@ describe('GameToken Contract Tests', () => {
 
     expect(aliceDeviceSession.value.equals(UInt64.from(1))).toBeTruthy();
 
-    const deviceSessionProof = await DeviceSession.proofForSession(
+    const { proof: deviceSessionProof } = await DeviceSession.proofForSession(
       {
         gameToken: GameTokenAddr2,
         currentSessionKey: UInt64.from(1),

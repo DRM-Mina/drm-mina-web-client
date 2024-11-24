@@ -12,8 +12,8 @@ importers:
         specifier: ^16.4.5
         version: 16.4.5
       o1js:
-        specifier: https://pkg.pr.new/o1-labs/o1js@fc16ce3
-        version: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+        specifier: ^2.1
+        version: 2.1.0
     devDependencies:
       '@babel/preset-env':
         specifier: ^7.16.4
@@ -1704,9 +1704,8 @@ packages:
     resolution: {integrity: sha512-S48WzZW777zhNIrn7gxOlISNAqi9ZC/uQFnRdbeIHhZhCA6UqpkOT8T1G7BvfdgP4Er8gF4sUbaS0i7QvIfCWw==}
     engines: {node: '>=8'}
 
-  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
-    resolution: {tarball: https://pkg.pr.new/o1-labs/o1js@fc16ce3}
-    version: 1.9.0
+  o1js@2.1.0:
+    resolution: {integrity: sha512-d3S4ouWHlzne86gVCiMWp+jELqsNdIAzSCzV5QLqK2hyhTclHXDENivzlP/RZ44EEns/CaI7LHuwbovCPMhaCw==}
     engines: {node: '>=18.14.0'}
     hasBin: true
 
@@ -4263,7 +4262,7 @@ snapshots:
     dependencies:
       path-key: 3.1.1
 
-  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
+  o1js@2.1.0:
     dependencies:
       blakejs: 1.2.1
       cachedir: 2.4.0

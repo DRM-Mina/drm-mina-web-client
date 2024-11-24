@@ -9,7 +9,7 @@ import {
   PublicKey,
   State,
   Struct,
-  TokenContractV2,
+  TokenContract,
   Types,
   UInt64,
   VerificationKey,
@@ -44,7 +44,7 @@ export const DRM_MINA_PROVIDER_PUB_KEY = PublicKey.fromBase58(
 
 export const DRM_MINA_FEE_PERCENTAGE = 5;
 
-export class GameToken extends TokenContractV2 {
+export class GameToken extends TokenContract {
   @state(PublicKey) publisher = State<PublicKey>();
 
   @state(UInt64) gamePrice = State<UInt64>();
@@ -295,7 +295,7 @@ export class GameToken extends TokenContractV2 {
         totalBalance.add(update.balanceChange),
         totalBalance
       );
-      totalBalance.isPositiveV2().assertFalse(GameTokenErrors.flashMinting);
+      totalBalance.isPositive().assertFalse(GameTokenErrors.flashMinting);
     });
     totalBalance.assertEquals(
       Int64.zero,
