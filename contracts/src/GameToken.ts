@@ -232,20 +232,10 @@ export class GameToken extends TokenContract {
     this.maxDeviceAllowed.set(maxDeviceAllowed);
   }
 
-  private onlyPublisher() {
+  public onlyPublisher() {
     const publisher = this.publisher.getAndRequireEquals();
     AccountUpdate.create(publisher).requireSignature();
   }
-
-  // private async ensureAdminSignature() {
-  //   const admin = await Provable.witnessAsync(PublicKey, async () => {
-  //     let pk = await this.publisher.fetch();
-  //     assert(pk !== undefined, 'could not fetch admin public key');
-  //     return pk;
-  //   });
-  //   this.publisher.requireEquals(admin);
-  //   return AccountUpdate.createSigned(admin);
-  // }
 
   private checkPermissionsUpdate(update: AccountUpdate) {
     let permissions = update.update.permissions;

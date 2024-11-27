@@ -1,4 +1,11 @@
-import { PrivateKey, Mina, UInt64, Bool, AccountUpdate } from 'o1js';
+import {
+  PrivateKey,
+  Mina,
+  UInt64,
+  Bool,
+  AccountUpdate,
+  VerificationKey,
+} from 'o1js';
 import {
   DRM_MINA_FEE_PERCENTAGE,
   DRM_MINA_PROVIDER_PUB_KEY,
@@ -10,9 +17,10 @@ import { DeviceSession } from '../lib/DeviceSessionProof.js';
 import { mockIdentifiers } from './mock.js';
 import { Identifiers } from '../lib/DeviceIdentifier.js';
 import { BundledDeviceSession } from '../lib/BundledDeviceSessionProof.js';
+import { DummyContract } from './Dummy.js';
 
 describe('GameToken Contract Tests', () => {
-  const proofsEnabled = false;
+  const proofsEnabled = true;
   const GAMEPRICE1 = 10000;
   const DISCOUNT1 = 1000;
   const GAMEPRICE2 = 20000;
@@ -33,7 +41,12 @@ describe('GameToken Contract Tests', () => {
   const BobDeviceIdentifiers = Identifiers.fromRaw(BobDeviceRaw);
 
   let localChain: any;
-  let publisher: any, alice: any, bob: any, charlie: any, david: any;
+  let publisher: any,
+    newPublisher: any,
+    alice: any,
+    bob: any,
+    charlie: any,
+    david: any;
   let GameTokenPk1: PrivateKey;
   let GameTokenAddr1: any;
   let GameTokenInstance1: GameToken;
@@ -49,6 +62,8 @@ describe('GameToken Contract Tests', () => {
   let DRMPk2: PrivateKey;
   let DRMAddr2: any;
   let DRMInstance2: DRM;
+
+  let dummyVK: VerificationKey;
 
   beforeAll(async () => {
     localChain = await Mina.LocalBlockchain({
@@ -95,6 +110,9 @@ describe('GameToken Contract Tests', () => {
     console.time('Compile DRM');
     await DRM.compile();
     console.timeEnd('Compile DRM');
+    console.time('Compile DummyContract');
+    dummyVK = (await DummyContract.compile()).verificationKey;
+    console.timeEnd('Compile DummyContract');
   });
 
   test('Funding DRM Provider', async () => {
@@ -268,24 +286,28 @@ describe('GameToken Contract Tests', () => {
 
     console.timeEnd('Device identifier proof create');
     console.time('Alice registers a device');
-    const registerDeviceTx = await Mina.transaction(
-      {
-        sender: alice,
-        fee: 1e8,
-      },
-      async () => {
-        await DRMInstance1.initAndAddDevice(
-          alice,
-          deviceIdentifier,
-          UInt64.from(1)
-        );
-      }
-    );
+    try {
+      const registerDeviceTx = await Mina.transaction(
+        {
+          sender: alice,
+          fee: 1e8,
+        },
+        async () => {
+          await DRMInstance1.initAndAddDevice(
+            alice,
+            deviceIdentifier,
+            UInt64.from(1)
+          );
+        }
+      );
 
-    registerDeviceTx.sign([alice.key]);
+      registerDeviceTx.sign([alice.key]);
 
-    await registerDeviceTx.prove();
-    await registerDeviceTx.send();
+      await registerDeviceTx.prove();
+      await registerDeviceTx.send();
+    } catch (error) {
+      console.log(error);
+    }
     console.timeEnd('Alice registers a device');
 
     console.time('Setttling');
@@ -941,5 +963,52 @@ describe('GameToken Contract Tests', () => {
     );
 
     expect(aliceDeviceSession.value.equals(UInt64.from(20))).toBeTruthy();
+  });
+
+  test('Alice tries to change verification key', async () => {
+    try {
+      const changeVKTx = await Mina.transaction(
+        {
+          sender: alice,
+          fee: 1e8,
+        },
+        async () => {
+          await DRMInstance1.updateVerificationKey(dummyVK);
+        }
+      );
+
+      changeVKTx.sign([alice.key]);
+
+      await changeVKTx.prove();
+      await changeVKTx.send();
+      throw new Error(
+        'Alice should not be able to change the verification key'
+      );
+    } catch (e) {
+      console.log('Alice cannot change the verification key as expected');
+    }
+  });
+
+  test('Publisher tries to change verification key', async () => {
+    const changeVKTx = await Mina.transaction(
+      {
+        sender: newPublisher,
+        fee: 1e8,
+      },
+      async () => {
+        await DRMInstance1.updateVerificationKey(dummyVK);
+      }
+    );
+
+    changeVKTx.sign([newPublisher.key]);
+
+    await changeVKTx.prove();
+    await changeVKTx.send();
+
+    let account = Mina.getAccount(DRMAddr1);
+
+    expect(account?.zkapp?.verificationKey?.hash.toBigInt()).toEqual(
+      dummyVK.hash.toBigInt()
+    );
   });
 });

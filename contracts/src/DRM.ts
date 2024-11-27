@@ -67,7 +67,7 @@ export class DRM extends SmartContract {
     this.account.permissions.set({
       ...Permissions.default(),
       setVerificationKey:
-        Permissions.VerificationKey.impossibleDuringCurrentVersion(),
+        Permissions.VerificationKey.proofDuringCurrentVersion(),
       setPermissions: Permissions.impossible(),
     });
   }
@@ -76,6 +76,10 @@ export class DRM extends SmartContract {
 
   @method
   async updateVerificationKey(vk: VerificationKey) {
+    const gameTokenAddress = this.gameTokenAddress.getAndRequireEquals();
+    const gameToken = new GameToken(gameTokenAddress);
+    gameToken.onlyPublisher();
+
     this.account.verificationKey.set(vk);
   }
 
@@ -114,7 +118,6 @@ export class DRM extends SmartContract {
     await gameToken.approveAccountUpdate(accountUpdate);
     tokenBalance.assertGreaterThan(UInt64.zero);
 
-    // TODO: getAndRequireEquals()
     const maxDeviceAllowed = gameToken.maxDeviceAllowed.get();
     deviceIndex.assertGreaterThan(UInt64.from(0));
     deviceIndex.assertLessThanOrEqual(maxDeviceAllowed);
@@ -188,7 +191,6 @@ export class DRM extends SmartContract {
     await gameToken.approveAccountUpdate(accountUpdate);
     tokenBalance.assertGreaterThan(UInt64.zero);
 
-    // TODO: getAndRequireEquals()
     const maxDeviceAllowed = gameToken.maxDeviceAllowed.get();
     deviceIndex.assertGreaterThan(UInt64.from(0));
     deviceIndex.assertLessThanOrEqual(maxDeviceAllowed);
