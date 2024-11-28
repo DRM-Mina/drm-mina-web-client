@@ -28,7 +28,7 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "drm-mina-contracts": "^0.6",
+    "drm-mina-contracts": "^0.6.3",
     "embla-carousel-autoplay": "^8.3.0",
     "embla-carousel-react": "^8.3.0",
     "immer": "^10.1.1",

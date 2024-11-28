@@ -515,7 +515,10 @@ const functions = {
             UInt64.from(numberOfDevices),
             Bool(false)
           );
-          await DRMInstance.deploy();
+          await DRMInstance.deploy({
+            symbol,
+            src: "https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/DRM.ts",
+          });
           await DRMInstance.initialize(GameTokenAddr);
         }
       );
