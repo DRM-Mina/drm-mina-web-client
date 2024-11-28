@@ -127,7 +127,10 @@ const deployTx = await Mina.transaction(
       UInt64.from(MAXTREEHEIGHT),
       Bool(false)
     );
-    await DRMInstance1.deploy();
+    await DRMInstance1.deploy({
+      symbol: 'tokA',
+      src: '',
+    });
     await DRMInstance1.initialize(GameTokenAddr1);
   }
 );

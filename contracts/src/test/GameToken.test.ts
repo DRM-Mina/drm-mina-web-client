@@ -4,9 +4,7 @@ import {
   UInt64,
   Bool,
   AccountUpdate,
-  fetchAccount,
   VerificationKey,
-  TokenId,
 } from 'o1js';
 import {
   DRM_MINA_FEE_PERCENTAGE,

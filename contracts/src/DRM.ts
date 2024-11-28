@@ -14,6 +14,7 @@ import {
   TokenId,
   AccountUpdate,
   Provable,
+  DeployArgs,
 } from 'o1js';
 import { DeviceIdentifierProof } from './lib/DeviceIdentifierProof.js';
 import { DeviceSessionProof } from './lib/DeviceSessionProof.js';
@@ -51,6 +52,11 @@ export const offchainState = OffchainState(
 
 export class StateProof extends offchainState.Proof {}
 
+interface DRMDeployProps extends Exclude<DeployArgs, undefined> {
+  symbol: string;
+  src: string;
+}
+
 export class DRM extends SmartContract {
   @state(PublicKey) gameTokenAddress = State<PublicKey>();
 
@@ -61,8 +67,8 @@ export class DRM extends SmartContract {
     Session: SessionEvent,
   };
 
-  async deploy() {
-    await super.deploy();
+  async deploy(props: DRMDeployProps) {
+    await super.deploy(props);
 
     this.account.permissions.set({
       ...Permissions.default(),

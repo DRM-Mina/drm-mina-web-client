@@ -159,7 +159,10 @@ describe('GameToken Contract Tests', () => {
           UInt64.from(MAXTREEHEIGHT),
           Bool(false)
         );
-        await DRMInstance1.deploy();
+        await DRMInstance1.deploy({
+          symbol: 'tokA',
+          src: '',
+        });
         await DRMInstance1.initialize(GameTokenAddr1);
       }
     );
@@ -205,7 +208,10 @@ describe('GameToken Contract Tests', () => {
           UInt64.from(MAXTREEHEIGHT),
           Bool(false)
         );
-        await DRMInstance2.deploy();
+        await DRMInstance2.deploy({
+          symbol: 'tokB',
+          src: '',
+        });
         await DRMInstance2.initialize(GameTokenAddr2);
       }
     );

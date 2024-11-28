@@ -19,8 +19,8 @@ import { Identifiers } from '../lib/DeviceIdentifier.js';
 import { BundledDeviceSession } from '../lib/BundledDeviceSessionProof.js';
 import { DummyContract } from './Dummy.js';
 
-describe('GameToken Contract Tests', () => {
-  const proofsEnabled = true;
+describe('DRM Contract Tests', () => {
+  const proofsEnabled = false;
   const GAMEPRICE1 = 10000;
   const DISCOUNT1 = 1000;
   const GAMEPRICE2 = 20000;
@@ -72,7 +72,8 @@ describe('GameToken Contract Tests', () => {
     });
     Mina.setActiveInstance(localChain);
 
-    [publisher, alice, bob, charlie, david] = localChain.testAccounts;
+    [publisher, newPublisher, alice, bob, charlie, david] =
+      localChain.testAccounts;
 
     GameTokenPk1 = PrivateKey.random();
     GameTokenAddr1 = GameTokenPk1.toPublicKey();
@@ -149,8 +150,8 @@ describe('GameToken Contract Tests', () => {
       async () => {
         AccountUpdate.fundNewAccount(publisher, 3);
         await GameTokenInstance1.deploy({
-          symbol: 'tokA',
-          src: '',
+          symbol: 'test',
+          src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/GameToken.ts',
         });
         await GameTokenInstance1.initialize(
           publisher,
@@ -160,7 +161,10 @@ describe('GameToken Contract Tests', () => {
           UInt64.from(MAXTREEHEIGHT),
           Bool(false)
         );
-        await DRMInstance1.deploy();
+        await DRMInstance1.deploy({
+          symbol: 'test',
+          src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/DRM.ts',
+        });
         await DRMInstance1.initialize(GameTokenAddr1);
       }
     );
@@ -182,8 +186,8 @@ describe('GameToken Contract Tests', () => {
       async () => {
         AccountUpdate.fundNewAccount(publisher, 3);
         await GameTokenInstance2.deploy({
-          symbol: 'tokB',
-          src: '',
+          symbol: 'test2',
+          src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/GameToken.ts',
         });
         await GameTokenInstance2.initialize(
           publisher,
@@ -193,7 +197,10 @@ describe('GameToken Contract Tests', () => {
           UInt64.from(MAXTREEHEIGHT),
           Bool(false)
         );
-        await DRMInstance2.deploy();
+        await DRMInstance2.deploy({
+          symbol: 'test2',
+          src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/DRM.ts',
+        });
         await DRMInstance2.initialize(GameTokenAddr2);
       }
     );
@@ -992,7 +999,7 @@ describe('GameToken Contract Tests', () => {
   test('Publisher tries to change verification key', async () => {
     const changeVKTx = await Mina.transaction(
       {
-        sender: newPublisher,
+        sender: publisher,
         fee: 1e8,
       },
       async () => {
@@ -1000,7 +1007,7 @@ describe('GameToken Contract Tests', () => {
       }
     );
 
-    changeVKTx.sign([newPublisher.key]);
+    changeVKTx.sign([publisher.key]);
 
     await changeVKTx.prove();
     await changeVKTx.send();
