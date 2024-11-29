@@ -40,10 +40,12 @@ export const DeviceSession = ZkProgram({
         publicInput.currentSessionKey.equals(newSessionKey).assertFalse();
 
         return {
-          gameToken: gameToken,
-          currentSessionKey: publicInput.currentSessionKey,
-          newSessionKey: newSessionKey,
-          hash: identifiersHash,
+          publicOutput: {
+            gameToken: gameToken,
+            currentSessionKey: publicInput.currentSessionKey,
+            newSessionKey: newSessionKey,
+            hash: identifiersHash,
+          },
         };
       },
     },

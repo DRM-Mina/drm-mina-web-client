@@ -81,7 +81,10 @@ const deployTx = await Mina.transaction(
       UInt64.from(MAXDEVICEALLOWED),
       Bool(false)
     );
-    await DRMInstance.deploy();
+    await DRMInstance.deploy({
+      symbol: GAME_TOKEN_NAME,
+      src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/DRM.ts',
+    });
     await DRMInstance.initialize(GameTokenAddr);
   }
 );

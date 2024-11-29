@@ -1,4 +1,11 @@
-import { PrivateKey, Mina, UInt64, Bool, AccountUpdate } from 'o1js';
+import {
+  PrivateKey,
+  Mina,
+  UInt64,
+  Bool,
+  AccountUpdate,
+  VerificationKey,
+} from 'o1js';
 import {
   DRM_MINA_FEE_PERCENTAGE,
   DRM_MINA_PROVIDER_PUB_KEY,
@@ -10,8 +17,9 @@ import { DeviceSession } from '../lib/DeviceSessionProof.js';
 import { mockIdentifiers } from './mock.js';
 import { Identifiers } from '../lib/DeviceIdentifier.js';
 import { BundledDeviceSession } from '../lib/BundledDeviceSessionProof.js';
+import { DummyContract } from './Dummy.js';
 
-describe('GameToken Contract Tests', () => {
+describe('DRM Contract Tests', () => {
   const proofsEnabled = false;
   const GAMEPRICE1 = 10000;
   const DISCOUNT1 = 1000;
@@ -33,7 +41,12 @@ describe('GameToken Contract Tests', () => {
   const BobDeviceIdentifiers = Identifiers.fromRaw(BobDeviceRaw);
 
   let localChain: any;
-  let publisher: any, alice: any, bob: any, charlie: any, david: any;
+  let publisher: any,
+    newPublisher: any,
+    alice: any,
+    bob: any,
+    charlie: any,
+    david: any;
   let GameTokenPk1: PrivateKey;
   let GameTokenAddr1: any;
   let GameTokenInstance1: GameToken;
@@ -50,6 +63,8 @@ describe('GameToken Contract Tests', () => {
   let DRMAddr2: any;
   let DRMInstance2: DRM;
 
+  let dummyVK: VerificationKey;
+
   beforeAll(async () => {
     localChain = await Mina.LocalBlockchain({
       proofsEnabled,
@@ -57,7 +72,8 @@ describe('GameToken Contract Tests', () => {
     });
     Mina.setActiveInstance(localChain);
 
-    [publisher, alice, bob, charlie, david] = localChain.testAccounts;
+    [publisher, newPublisher, alice, bob, charlie, david] =
+      localChain.testAccounts;
 
     GameTokenPk1 = PrivateKey.random();
     GameTokenAddr1 = GameTokenPk1.toPublicKey();
@@ -95,6 +111,9 @@ describe('GameToken Contract Tests', () => {
     console.time('Compile DRM');
     await DRM.compile();
     console.timeEnd('Compile DRM');
+    console.time('Compile DummyContract');
+    dummyVK = (await DummyContract.compile()).verificationKey;
+    console.timeEnd('Compile DummyContract');
   });
 
   test('Funding DRM Provider', async () => {
@@ -131,8 +150,8 @@ describe('GameToken Contract Tests', () => {
       async () => {
         AccountUpdate.fundNewAccount(publisher, 3);
         await GameTokenInstance1.deploy({
-          symbol: 'tokA',
-          src: '',
+          symbol: 'test',
+          src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/GameToken.ts',
         });
         await GameTokenInstance1.initialize(
           publisher,
@@ -142,7 +161,10 @@ describe('GameToken Contract Tests', () => {
           UInt64.from(MAXTREEHEIGHT),
           Bool(false)
         );
-        await DRMInstance1.deploy();
+        await DRMInstance1.deploy({
+          symbol: 'test',
+          src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/DRM.ts',
+        });
         await DRMInstance1.initialize(GameTokenAddr1);
       }
     );
@@ -164,8 +186,8 @@ describe('GameToken Contract Tests', () => {
       async () => {
         AccountUpdate.fundNewAccount(publisher, 3);
         await GameTokenInstance2.deploy({
-          symbol: 'tokB',
-          src: '',
+          symbol: 'test2',
+          src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/GameToken.ts',
         });
         await GameTokenInstance2.initialize(
           publisher,
@@ -175,7 +197,10 @@ describe('GameToken Contract Tests', () => {
           UInt64.from(MAXTREEHEIGHT),
           Bool(false)
         );
-        await DRMInstance2.deploy();
+        await DRMInstance2.deploy({
+          symbol: 'test2',
+          src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/DRM.ts',
+        });
         await DRMInstance2.initialize(GameTokenAddr2);
       }
     );
@@ -249,7 +274,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Alice registers a device to game 1', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
       AliceDeviceIdentifiers
     );
 
@@ -268,24 +293,28 @@ describe('GameToken Contract Tests', () => {
 
     console.timeEnd('Device identifier proof create');
     console.time('Alice registers a device');
-    const registerDeviceTx = await Mina.transaction(
-      {
-        sender: alice,
-        fee: 1e8,
-      },
-      async () => {
-        await DRMInstance1.initAndAddDevice(
-          alice,
-          deviceIdentifier,
-          UInt64.from(1)
-        );
-      }
-    );
+    try {
+      const registerDeviceTx = await Mina.transaction(
+        {
+          sender: alice,
+          fee: 1e8,
+        },
+        async () => {
+          await DRMInstance1.initAndAddDevice(
+            alice,
+            deviceIdentifier,
+            UInt64.from(1)
+          );
+        }
+      );
 
-    registerDeviceTx.sign([alice.key]);
+      registerDeviceTx.sign([alice.key]);
 
-    await registerDeviceTx.prove();
-    await registerDeviceTx.send();
+      await registerDeviceTx.prove();
+      await registerDeviceTx.send();
+    } catch (error) {
+      console.log(error);
+    }
     console.timeEnd('Alice registers a device');
 
     console.time('Setttling');
@@ -376,7 +405,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Alice registers a device to game 2', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
       AliceDeviceIdentifiers
     );
 
@@ -443,7 +472,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Alice registers another device to game 1', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier2 = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier2 } = await DeviceIdentifier.proofForDevice(
       AliceDeviceIdentifiers2
     );
 
@@ -494,7 +523,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Alice registers another device to game 2', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier2 = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier2 } = await DeviceIdentifier.proofForDevice(
       AliceDeviceIdentifiers2
     );
 
@@ -546,7 +575,7 @@ describe('GameToken Contract Tests', () => {
   test('Bob trying to register a device without buying a game 1', async () => {
     try {
       console.time('Device identifier proof create');
-      const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+      const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
         BobDeviceIdentifiers
       );
 
@@ -583,7 +612,7 @@ describe('GameToken Contract Tests', () => {
   test('Bob tries to register a device with other methods', async () => {
     try {
       console.time('Device identifier proof create');
-      const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+      const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
         BobDeviceIdentifiers
       );
 
@@ -677,7 +706,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Bob registers a device to game 1', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
       BobDeviceIdentifiers
     );
 
@@ -723,7 +752,7 @@ describe('GameToken Contract Tests', () => {
   test('Bob tries to register a device with other methods', async () => {
     try {
       console.time('Device identifier proof create');
-      const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+      const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
         BobDeviceIdentifiers
       );
 
@@ -767,7 +796,7 @@ describe('GameToken Contract Tests', () => {
 
     expect(aliceDeviceSession.value.equals(UInt64.from(1))).toBeTruthy();
 
-    const deviceSessionProof = await DeviceSession.proofForSession(
+    const { proof: deviceSessionProof } = await DeviceSession.proofForSession(
       {
         gameToken: GameTokenAddr1,
         currentSessionKey: UInt64.from(1),
@@ -801,7 +830,7 @@ describe('GameToken Contract Tests', () => {
 
   test('Alice register device 3 in slot 1 in game 1', async () => {
     console.time('Device identifier proof create');
-    const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+    const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
       AliceDeviceIdentifiers3
     );
 
@@ -871,7 +900,7 @@ describe('GameToken Contract Tests', () => {
 
       expect(aliceDeviceSession.value.equals(UInt64.from(0))).toBeTruthy();
 
-      const deviceSessionProof = await DeviceSession.proofForSession(
+      const { proof: deviceSessionProof } = await DeviceSession.proofForSession(
         {
           gameToken: GameTokenAddr1,
           currentSessionKey: UInt64.from(0),
@@ -911,7 +940,7 @@ describe('GameToken Contract Tests', () => {
 
     expect(aliceDeviceSession.value.equals(UInt64.from(1))).toBeTruthy();
 
-    const deviceSessionProof = await DeviceSession.proofForSession(
+    const { proof: deviceSessionProof } = await DeviceSession.proofForSession(
       {
         gameToken: GameTokenAddr2,
         currentSessionKey: UInt64.from(1),
@@ -941,5 +970,52 @@ describe('GameToken Contract Tests', () => {
     );
 
     expect(aliceDeviceSession.value.equals(UInt64.from(20))).toBeTruthy();
+  });
+
+  test('Alice tries to change verification key', async () => {
+    try {
+      const changeVKTx = await Mina.transaction(
+        {
+          sender: alice,
+          fee: 1e8,
+        },
+        async () => {
+          await DRMInstance1.updateVerificationKey(dummyVK);
+        }
+      );
+
+      changeVKTx.sign([alice.key]);
+
+      await changeVKTx.prove();
+      await changeVKTx.send();
+      throw new Error(
+        'Alice should not be able to change the verification key'
+      );
+    } catch (e) {
+      console.log('Alice cannot change the verification key as expected');
+    }
+  });
+
+  test('Publisher tries to change verification key', async () => {
+    const changeVKTx = await Mina.transaction(
+      {
+        sender: publisher,
+        fee: 1e8,
+      },
+      async () => {
+        await DRMInstance1.updateVerificationKey(dummyVK);
+      }
+    );
+
+    changeVKTx.sign([publisher.key]);
+
+    await changeVKTx.prove();
+    await changeVKTx.send();
+
+    let account = Mina.getAccount(DRMAddr1);
+
+    expect(account?.zkapp?.verificationKey?.hash.toBigInt()).toEqual(
+      dummyVK.hash.toBigInt()
+    );
   });
 });

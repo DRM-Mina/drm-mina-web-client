@@ -63,8 +63,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       drm-mina-contracts:
-        specifier: ^0.5
-        version: 0.5.0
+        specifier: ^0.6.3
+        version: 0.6.3
       embla-carousel-autoplay:
         specifier: ^8.3.0
         version: 8.3.0(embla-carousel@8.3.0)
@@ -84,8 +84,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       o1js:
-        specifier: https://pkg.pr.new/o1-labs/o1js@fc16ce3
-        version: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+        specifier: https://pkg.pr.new/o1-labs/o1js@784f02d
+        version: https://pkg.pr.new/o1-labs/o1js@784f02d
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1079,8 +1079,8 @@ packages:
     resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
     engines: {node: '>=12'}
 
-  drm-mina-contracts@0.5.0:
-    resolution: {integrity: sha512-MrWh2nI/zr3UoT0XUHHd/FXfWh+nu26L5jFYrzIaO3Q9cLr7IsWhOBuBPDs/Ghl0ck6llcIBLEBD1Rtcl+rkFA==}
+  drm-mina-contracts@0.6.3:
+    resolution: {integrity: sha512-dOYlmXCAafrwWUQoxig13wJmQTt6AXKyfk4Tji/5A4XkFBLq9xHmpx5eV2WwpKWJkomZfTdZh7HK0GJqtQDo3Q==}
     engines: {node: '>=18.14.0'}
 
   eastasianwidth@0.2.0:
@@ -1723,9 +1723,14 @@ packages:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
 
-  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
-    resolution: {tarball: https://pkg.pr.new/o1-labs/o1js@fc16ce3}
-    version: 1.9.0
+  o1js@2.1.0:
+    resolution: {integrity: sha512-d3S4ouWHlzne86gVCiMWp+jELqsNdIAzSCzV5QLqK2hyhTclHXDENivzlP/RZ44EEns/CaI7LHuwbovCPMhaCw==}
+    engines: {node: '>=18.14.0'}
+    hasBin: true
+
+  o1js@https://pkg.pr.new/o1-labs/o1js@784f02d:
+    resolution: {tarball: https://pkg.pr.new/o1-labs/o1js@784f02d}
+    version: 2.1.0
     engines: {node: '>=18.14.0'}
     hasBin: true
 
@@ -2171,6 +2176,9 @@ packages:
 
   tslib@2.8.0:
     resolution: {integrity: sha512-jWVzBLplnCmoaTr13V9dYbiQ99wvZRd0vNWaDRg+aVYRcjDF3nDksxFDE/+fkXnKhpnUUkmx5pK/v8mCtLVqZA==}
+
+  tslib@2.8.1:
+    resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -3264,10 +3272,10 @@ snapshots:
 
   dotenv@16.4.5: {}
 
-  drm-mina-contracts@0.5.0:
+  drm-mina-contracts@0.6.3:
     dependencies:
       dotenv: 16.4.5
-      o1js: https://pkg.pr.new/o1-labs/o1js@fc16ce3
+      o1js: 2.1.0
     transitivePeerDependencies:
       - encoding
 
@@ -4071,7 +4079,18 @@ snapshots:
 
   normalize-path@3.0.0: {}
 
-  o1js@https://pkg.pr.new/o1-labs/o1js@fc16ce3:
+  o1js@2.1.0:
+    dependencies:
+      blakejs: 1.2.1
+      cachedir: 2.4.0
+      isomorphic-fetch: 3.0.0
+      js-sha256: 0.9.0
+      reflect-metadata: 0.1.14
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - encoding
+
+  o1js@https://pkg.pr.new/o1-labs/o1js@784f02d:
     dependencies:
       blakejs: 1.2.1
       cachedir: 2.4.0
@@ -4554,6 +4573,8 @@ snapshots:
       strip-bom: 3.0.0
 
   tslib@2.8.0: {}
+
+  tslib@2.8.1: {}
 
   type-check@0.4.0:
     dependencies:

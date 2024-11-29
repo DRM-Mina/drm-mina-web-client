@@ -1,12 +1,10 @@
 import {
   PrivateKey,
-  PublicKey,
   Mina,
   UInt64,
   AccountUpdate,
   Bool,
   fetchAccount,
-  Account,
 } from 'o1js';
 import { DRM, offchainState } from '../DRM.js';
 import { GameToken } from '../GameToken.js';
@@ -34,6 +32,11 @@ let nonce = Number(account!.nonce.toBigint());
 
 console.log(publisherPubKey.toBase58());
 
+const SYMBOLS = ['DIMND', 'KINDA', 'DEMO'];
+const GAMETOKENSOURCE =
+  'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/GameToken.ts';
+const DRMSOURCE =
+  'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/DRM.ts';
 const GAMEPRICE = [10_000_000_000, 20_000_000_000, 15_000_000_000];
 const DISCOUNT = [2_000_000_000, 0, 5_000_000_000];
 const TIMEOUTINTERVAL = 10000;
@@ -71,17 +74,20 @@ for (let i = 0; i < 3; i++) {
   DRMInstance.offchainState.setContractInstance(DRMInstance);
 
   console.time(`Deploying ${i}`);
+  console.log(`GameToken ${i} pk: ${GameTokenPk.toBase58()}`);
+  console.log(`DRM ${i} pk: ${DRMPk.toBase58()}`);
   const deployTx = await Mina.transaction(
     {
       sender: publisherPubKey,
       fee: 1e8,
       nonce: nonce++,
+      memo: `DRM Mina Deploy`,
     },
     async () => {
       AccountUpdate.fundNewAccount(publisherPubKey, 3);
       await GameTokenInstance.deploy({
-        symbol: 'DRM',
-        src: 'https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/GameToken.ts',
+        symbol: SYMBOLS[i],
+        src: GAMETOKENSOURCE,
       });
       await GameTokenInstance.initialize(
         publisherPubKey,
@@ -91,7 +97,10 @@ for (let i = 0; i < 3; i++) {
         UInt64.from(MAXDEVICEALLOWED),
         Bool(false)
       );
-      await DRMInstance.deploy();
+      await DRMInstance.deploy({
+        symbol: SYMBOLS[i],
+        src: DRMSOURCE,
+      });
       await DRMInstance.initialize(GameTokenAddr);
     }
   );

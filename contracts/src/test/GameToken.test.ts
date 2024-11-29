@@ -1,9 +1,17 @@
-import { PrivateKey, Mina, UInt64, Bool, AccountUpdate } from 'o1js';
+import {
+  PrivateKey,
+  Mina,
+  UInt64,
+  Bool,
+  AccountUpdate,
+  VerificationKey,
+} from 'o1js';
 import {
   DRM_MINA_FEE_PERCENTAGE,
   DRM_MINA_PROVIDER_PUB_KEY,
   GameToken,
 } from '../GameToken.js';
+import { DummyContract } from './Dummy.js';
 
 describe('GameToken Contract Tests', () => {
   const proofsEnabled = false;
@@ -13,10 +21,17 @@ describe('GameToken Contract Tests', () => {
   let MAXDEVICESALLOWED = 2;
 
   let localChain: any;
-  let publisher: any, alice: any, bob: any, charlie: any, david: any;
+  let publisher: any,
+    newPublisher: any,
+    alice: any,
+    bob: any,
+    charlie: any,
+    david: any;
   let GameTokenPk: PrivateKey;
   let GameTokenAddr: any;
   let GameTokenInstance: GameToken;
+
+  let dummyVK: VerificationKey;
 
   beforeAll(async () => {
     localChain = await Mina.LocalBlockchain({
@@ -28,7 +43,11 @@ describe('GameToken Contract Tests', () => {
     console.log('Compiling GameToken ...');
     await GameToken.compile();
 
-    [publisher, alice, bob, charlie, david] = localChain.testAccounts;
+    console.log('Compiling DummyContract ...');
+    dummyVK = (await DummyContract.compile()).verificationKey;
+
+    [publisher, newPublisher, alice, bob, charlie, david] =
+      localChain.testAccounts;
 
     GameTokenPk = PrivateKey.random();
     GameTokenAddr = GameTokenPk.toPublicKey();
@@ -508,9 +527,6 @@ describe('GameToken Contract Tests', () => {
   });
 
   test('Publisher changes the publisher', async () => {
-    console.log('Publisher changes the publisher ...');
-
-    const newPublisher = PrivateKey.random().toPublicKey();
     const changePublisherTx = await Mina.transaction(
       {
         sender: publisher,
@@ -555,5 +571,54 @@ describe('GameToken Contract Tests', () => {
     } catch (e) {
       console.log('Publisher cannot change the publisher back as expected');
     }
+  });
+
+  test('Alice tries to change the verification key', async () => {
+    try {
+      const changeVKTx = await Mina.transaction(
+        {
+          sender: alice,
+          fee: 1e8,
+        },
+        async () => {
+          await GameTokenInstance.updateVerificationKey(dummyVK);
+        }
+      );
+
+      changeVKTx.sign([alice.key]);
+
+      await changeVKTx.prove();
+      await changeVKTx.send();
+      throw new Error(
+        'Alice should not be able to change the verification key'
+      );
+    } catch (e) {
+      console.log('Alice cannot change the verification key as expected');
+    }
+  });
+
+  test('Publisher changes the verification key', async () => {
+    console.log('Publisher changes the verification key ...');
+
+    const changeVKTx = await Mina.transaction(
+      {
+        sender: newPublisher,
+        fee: 1e8,
+      },
+      async () => {
+        await GameTokenInstance.updateVerificationKey(dummyVK);
+      }
+    );
+
+    changeVKTx.sign([newPublisher.key]);
+
+    await changeVKTx.prove();
+    await changeVKTx.send();
+
+    let account = Mina.getAccount(GameTokenAddr);
+
+    expect(account?.zkapp?.verificationKey?.hash.toBigInt()).toEqual(
+      dummyVK.hash.toBigInt()
+    );
   });
 });

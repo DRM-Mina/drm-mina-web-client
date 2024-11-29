@@ -1,6 +1,6 @@
 {
   "name": "drm-mina-contracts",
-  "version": "0.5.0",
+  "version": "0.6.3",
   "description": "",
   "author": "",
   "license": "Apache-2.0",
@@ -40,6 +40,6 @@
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "o1js": "https://pkg.pr.new/o1-labs/o1js@fc16ce3"
+    "o1js": "^2.1"
   }
 }

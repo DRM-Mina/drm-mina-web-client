@@ -237,8 +237,9 @@ const functions = {
       }
 
       const identifiers = Identifiers.fromRaw(rawIdentifiers);
-      const proof: DeviceIdentifierProof =
-        await state.deviceIdentifierProgram.proofForDevice(identifiers);
+      const proof: DeviceIdentifierProof = (
+        await state.deviceIdentifierProgram.proofForDevice(identifiers)
+      ).proof;
 
       const sender = PublicKey.fromBase58(userAddress);
       const transaction = await Mina.transaction(
@@ -295,8 +296,9 @@ const functions = {
       }
 
       const identifiers = Identifiers.fromRaw(rawIdentifiers);
-      const proof: DeviceIdentifierProof =
-        await state.deviceIdentifierProgram.proofForDevice(identifiers);
+      const proof: DeviceIdentifierProof = (
+        await state.deviceIdentifierProgram.proofForDevice(identifiers)
+      ).proof;
 
       const sender = PublicKey.fromBase58(userAddress);
       const transaction = await Mina.transaction(
@@ -513,7 +515,10 @@ const functions = {
             UInt64.from(numberOfDevices),
             Bool(false)
           );
-          await DRMInstance.deploy();
+          await DRMInstance.deploy({
+            symbol,
+            src: "https://github.com/DRM-Mina/drm-mina-web-client/blob/main/contracts/src/DRM.ts",
+          });
           await DRMInstance.initialize(GameTokenAddr);
         }
       );

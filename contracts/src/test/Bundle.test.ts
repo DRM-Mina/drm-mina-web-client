@@ -159,7 +159,10 @@ describe('GameToken Contract Tests', () => {
           UInt64.from(MAXTREEHEIGHT),
           Bool(false)
         );
-        await DRMInstance1.deploy();
+        await DRMInstance1.deploy({
+          symbol: 'tokA',
+          src: '',
+        });
         await DRMInstance1.initialize(GameTokenAddr1);
       }
     );
@@ -205,7 +208,10 @@ describe('GameToken Contract Tests', () => {
           UInt64.from(MAXTREEHEIGHT),
           Bool(false)
         );
-        await DRMInstance2.deploy();
+        await DRMInstance2.deploy({
+          symbol: 'tokB',
+          src: '',
+        });
         await DRMInstance2.initialize(GameTokenAddr2);
       }
     );
@@ -277,7 +283,7 @@ describe('GameToken Contract Tests', () => {
   test('All players register devices', async () => {
     console.time('All players register devices');
     for (let i = 0; i < 4; i++) {
-      const deviceIdentifier = await DeviceIdentifier.proofForDevice(
+      const { proof: deviceIdentifier } = await DeviceIdentifier.proofForDevice(
         deviceIdentifiers[i]
       );
       const deviceSession =
@@ -344,13 +350,15 @@ describe('GameToken Contract Tests', () => {
       );
     }
 
-    let bundleProof = await BundledDeviceSession.base(GameTokenAddr1);
+    let bundleProof = (await BundledDeviceSession.base(GameTokenAddr1)).proof;
     for (let i = 0; i < 1; i++) {
-      bundleProof = await BundledDeviceSession.appendToBundle(
-        GameTokenAddr1,
-        deviceProofs[i],
-        bundleProof
-      );
+      bundleProof = (
+        await BundledDeviceSession.appendToBundle(
+          GameTokenAddr1,
+          deviceProofs[i].proof,
+          bundleProof
+        )
+      ).proof;
     }
 
     expect(
@@ -430,13 +438,15 @@ describe('GameToken Contract Tests', () => {
       );
     }
 
-    let bundleProof = await BundledDeviceSession.base(GameTokenAddr1);
+    let bundleProof = (await BundledDeviceSession.base(GameTokenAddr1)).proof;
     for (let i = 0; i < 2; i++) {
-      bundleProof = await BundledDeviceSession.appendToBundle(
-        GameTokenAddr1,
-        deviceProofs[i],
-        bundleProof
-      );
+      bundleProof = (
+        await BundledDeviceSession.appendToBundle(
+          GameTokenAddr1,
+          deviceProofs[i].proof,
+          bundleProof
+        )
+      ).proof;
     }
 
     expect(
@@ -532,13 +542,15 @@ describe('GameToken Contract Tests', () => {
       );
     }
 
-    let bundleProof = await BundledDeviceSession.base(GameTokenAddr1);
+    let bundleProof = (await BundledDeviceSession.base(GameTokenAddr1)).proof;
     for (let i = 0; i < 3; i++) {
-      bundleProof = await BundledDeviceSession.appendToBundle(
-        GameTokenAddr1,
-        deviceProofs[i],
-        bundleProof
-      );
+      bundleProof = (
+        await BundledDeviceSession.appendToBundle(
+          GameTokenAddr1,
+          deviceProofs[i].proof,
+          bundleProof
+        )
+      ).proof;
     }
 
     expect(
@@ -651,13 +663,15 @@ describe('GameToken Contract Tests', () => {
       );
     }
 
-    let bundleProof = await BundledDeviceSession.base(GameTokenAddr1);
+    let bundleProof = (await BundledDeviceSession.base(GameTokenAddr1)).proof;
     for (let i = 0; i < 4; i++) {
-      bundleProof = await BundledDeviceSession.appendToBundle(
-        GameTokenAddr1,
-        deviceProofs[i],
-        bundleProof
-      );
+      bundleProof = (
+        await BundledDeviceSession.appendToBundle(
+          GameTokenAddr1,
+          deviceProofs[i].proof,
+          bundleProof
+        )
+      ).proof;
     }
 
     expect(

@@ -14,6 +14,7 @@ import {
   TokenId,
   AccountUpdate,
   Provable,
+  DeployArgs,
 } from 'o1js';
 import { DeviceIdentifierProof } from './lib/DeviceIdentifierProof.js';
 import { DeviceSessionProof } from './lib/DeviceSessionProof.js';
@@ -51,6 +52,11 @@ export const offchainState = OffchainState(
 
 export class StateProof extends offchainState.Proof {}
 
+interface DRMDeployProps extends Exclude<DeployArgs, undefined> {
+  symbol: string;
+  src: string;
+}
+
 export class DRM extends SmartContract {
   @state(PublicKey) gameTokenAddress = State<PublicKey>();
 
@@ -61,13 +67,13 @@ export class DRM extends SmartContract {
     Session: SessionEvent,
   };
 
-  async deploy() {
-    await super.deploy();
+  async deploy(props: DRMDeployProps) {
+    await super.deploy(props);
 
     this.account.permissions.set({
       ...Permissions.default(),
       setVerificationKey:
-        Permissions.VerificationKey.impossibleDuringCurrentVersion(),
+        Permissions.VerificationKey.proofDuringCurrentVersion(),
       setPermissions: Permissions.impossible(),
     });
   }
@@ -76,6 +82,10 @@ export class DRM extends SmartContract {
 
   @method
   async updateVerificationKey(vk: VerificationKey) {
+    const gameTokenAddress = this.gameTokenAddress.getAndRequireEquals();
+    const gameToken = new GameToken(gameTokenAddress);
+    gameToken.onlyPublisher();
+
     this.account.verificationKey.set(vk);
   }
 
@@ -114,7 +124,6 @@ export class DRM extends SmartContract {
     await gameToken.approveAccountUpdate(accountUpdate);
     tokenBalance.assertGreaterThan(UInt64.zero);
 
-    // TODO: getAndRequireEquals()
     const maxDeviceAllowed = gameToken.maxDeviceAllowed.get();
     deviceIndex.assertGreaterThan(UInt64.from(0));
     deviceIndex.assertLessThanOrEqual(maxDeviceAllowed);
@@ -188,7 +197,6 @@ export class DRM extends SmartContract {
     await gameToken.approveAccountUpdate(accountUpdate);
     tokenBalance.assertGreaterThan(UInt64.zero);
 
-    // TODO: getAndRequireEquals()
     const maxDeviceAllowed = gameToken.maxDeviceAllowed.get();
     deviceIndex.assertGreaterThan(UInt64.from(0));
     deviceIndex.assertLessThanOrEqual(maxDeviceAllowed);

@@ -9,7 +9,7 @@ import {
   PublicKey,
   State,
   Struct,
-  TokenContractV2,
+  TokenContract,
   Types,
   UInt64,
   VerificationKey,
@@ -44,7 +44,7 @@ export const DRM_MINA_PROVIDER_PUB_KEY = PublicKey.fromBase58(
 
 export const DRM_MINA_FEE_PERCENTAGE = 5;
 
-export class GameToken extends TokenContractV2 {
+export class GameToken extends TokenContract {
   @state(PublicKey) publisher = State<PublicKey>();
 
   @state(UInt64) gamePrice = State<UInt64>();
@@ -70,10 +70,9 @@ export class GameToken extends TokenContractV2 {
 
     this.account.permissions.set({
       ...Permissions.default(),
-      editState: Permissions.proof(),
       send: Permissions.impossible(),
       setVerificationKey:
-        Permissions.VerificationKey.impossibleDuringCurrentVersion(),
+        Permissions.VerificationKey.proofDuringCurrentVersion(),
       setPermissions: Permissions.impossible(),
       access: Permissions.proof(),
     });
@@ -81,6 +80,7 @@ export class GameToken extends TokenContractV2 {
 
   @method
   async updateVerificationKey(vk: VerificationKey) {
+    this.onlyPublisher();
     this.account.verificationKey.set(vk);
   }
 
@@ -100,8 +100,6 @@ export class GameToken extends TokenContractV2 {
     this.discount.set(discount);
     this.timeoutInterval.set(timeoutInterval);
     this.maxDeviceAllowed.set(maxDeviceAllowed);
-
-    this.paused.set(Bool(false));
     this.paused.set(startPaused);
 
     const accountUpdate = AccountUpdate.createSigned(
@@ -109,8 +107,9 @@ export class GameToken extends TokenContractV2 {
       this.deriveTokenId()
     );
     let permissions = Permissions.default();
-    // This is necessary in order to allow token holders to burn.
-    permissions.send = Permissions.none();
+    permissions.send = Permissions.impossible();
+    permissions.setVerificationKey =
+      Permissions.VerificationKey.proofDuringCurrentVersion();
     permissions.setPermissions = Permissions.impossible();
     accountUpdate.account.permissions.set(permissions);
   }
@@ -233,20 +232,10 @@ export class GameToken extends TokenContractV2 {
     this.maxDeviceAllowed.set(maxDeviceAllowed);
   }
 
-  private onlyPublisher() {
+  public onlyPublisher() {
     const publisher = this.publisher.getAndRequireEquals();
     AccountUpdate.create(publisher).requireSignature();
   }
-
-  // private async ensureAdminSignature() {
-  //   const admin = await Provable.witnessAsync(PublicKey, async () => {
-  //     let pk = await this.publisher.fetch();
-  //     assert(pk !== undefined, 'could not fetch admin public key');
-  //     return pk;
-  //   });
-  //   this.publisher.requireEquals(admin);
-  //   return AccountUpdate.createSigned(admin);
-  // }
 
   private checkPermissionsUpdate(update: AccountUpdate) {
     let permissions = update.update.permissions;
@@ -295,7 +284,7 @@ export class GameToken extends TokenContractV2 {
         totalBalance.add(update.balanceChange),
         totalBalance
       );
-      totalBalance.isPositiveV2().assertFalse(GameTokenErrors.flashMinting);
+      totalBalance.isPositive().assertFalse(GameTokenErrors.flashMinting);
     });
     totalBalance.assertEquals(
       Int64.zero,

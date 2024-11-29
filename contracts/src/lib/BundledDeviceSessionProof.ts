@@ -32,10 +32,12 @@ export const BundledDeviceSession = ZkProgram({
       publicOutputs: [BundledDeviceSessionOutput],
       async method(gameToken: PublicKey) {
         return {
-          deviceSessionOutputs: new Array(4).fill(
-            DeviceSessionOutput.dummy(gameToken)
-          ),
-          deviceCount: Field.from(0),
+          publicOutput: {
+            deviceSessionOutputs: new Array(4).fill(
+              DeviceSessionOutput.dummy(gameToken)
+            ),
+            deviceCount: Field.from(0),
+          },
         };
       },
     },
@@ -126,7 +128,7 @@ export const BundledDeviceSession = ZkProgram({
           deviceSessionOutputs: deviceSessionOutputs,
           deviceCount: previousBundleProof.publicOutput.deviceCount.add(1),
         });
-        return bundle;
+        return { publicOutput: bundle };
       },
     },
   },

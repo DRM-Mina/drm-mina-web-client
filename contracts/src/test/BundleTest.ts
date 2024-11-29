@@ -127,7 +127,10 @@ const deployTx = await Mina.transaction(
       UInt64.from(MAXTREEHEIGHT),
       Bool(false)
     );
-    await DRMInstance1.deploy();
+    await DRMInstance1.deploy({
+      symbol: 'tokA',
+      src: '',
+    });
     await DRMInstance1.initialize(GameTokenAddr1);
   }
 );
@@ -217,7 +220,7 @@ for (let i = 0; i < 4; i++) {
     async () => {
       await DRMInstance1.initAndAddDevice(
         localChain.testAccounts[i + 1],
-        deviceIdentifier,
+        deviceIdentifier.proof,
         UInt64.from(1)
       );
     }
@@ -265,13 +268,15 @@ for (let i = 0; i < 3; i++) {
   );
 }
 console.time('bundle');
-let bundleProof = await BundledDeviceSession.base(GameTokenAddr1);
+let bundleProof = (await BundledDeviceSession.base(GameTokenAddr1)).proof;
 for (let i = 0; i < 3; i++) {
-  bundleProof = await BundledDeviceSession.appendToBundle(
-    GameTokenAddr1,
-    deviceProofs[i],
-    bundleProof
-  );
+  bundleProof = (
+    await BundledDeviceSession.appendToBundle(
+      GameTokenAddr1,
+      deviceProofs[i].proof,
+      bundleProof
+    )
+  ).proof;
 }
 console.timeEnd('bundle');
 
