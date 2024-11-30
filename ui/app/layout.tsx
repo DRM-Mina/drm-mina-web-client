@@ -78,6 +78,22 @@ export default function RootLayout({
       <head>
         <title>DRM Mina</title>
         <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          name="description"
+          content="DRM Mina is a game marketplace connecting game creators and players on Mina Protocol. It uses zk-proofs to prevent piracy and ensure data privacy, empowering game developers and players alike."
+        />
+        <meta
+          name="keywords"
+          content="DRM Mina, game marketplace, Mina Protocol, zk-proofs, anti-piracy, game developers, decentralized gaming"
+        />
+        <meta name="author" content="kadirchan" />
+        <meta property="og:title" content="DRM Mina" />
+        <meta
+          property="og:description"
+          content="DRM Mina is a game marketplace connecting game creators and players on Mina Protocol. It uses zk-proofs to prevent piracy and ensure data privacy, empowering game developers and players alike."
+        />
+        <meta property="og:url" content="https://drmmina.com" />
       </head>
       <body className={inter.className}>
         <ThemeProvider
@@ -90,12 +106,19 @@ export default function RootLayout({
             <div className="absolute inset-0 border-t">
               <div className="absolute inset-0 bg-background">
                 <div className="grid grid-cols-6">
-                  <Sidebar className="sticky top-0 col-span-1" />
+                  <Sidebar
+                    className="sticky top-0 col-span-1"
+                    aria-label="Main Navigation"
+                    role="navigation"
+                  />
                   <main className=" col-start-2 col-end-7 overflow-hidden">
-                    <SearchBar />
+                    <SearchBar aria-label="Search Games" />
                     {children}
                   </main>
-                  <Footer className="col-start-2 col-end-7" />
+                  <Footer
+                    className="col-start-2 col-end-7"
+                    aria-label="Footer"
+                  />
                   <Toaster />
                 </div>
               </div>
