@@ -61,20 +61,12 @@ export const useWalletStore = create<WalletState, [["zustand/immer", never]]>(
       try {
         const wallet = await window.mina.requestAccounts();
         await window.mina?.switchChain({ networkID: "mina:testnet" });
-        // const network = await window.mina.requestNetwork();
         if (wallet[0]) {
           set((state) => {
             state.isConnected = true;
             state.walletInstalled = true;
             state.userPublicKey = wallet[0];
           });
-          //   window.mina.on("accountsChanged", ([wallet]) => {
-          //     set((state) => {
-          //       state.userPublicKey = wallet;
-          //       state.isConnected = !!wallet;
-          //       state.isAuthenticated = false;
-          //     });
-          //   });
           return 1;
         }
       } catch (e) {
